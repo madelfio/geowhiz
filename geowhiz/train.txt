@@ -1,0 +1,44 @@
+Australia; Brunei; Cambodia; China
+PCLI; _; Prominent6
+
+Paris; Rome; Brussels; London; Venice
+PPL; _; Prominent6
+
+Washington; Oregon; Idaho; Missouri
+ADM1; US; Prominent7
+
+Delaware; Powell; Sunbury
+PPL; OH|041; Prominent4
+
+Washington; New York; Boston
+PPL; US; Prominent6
+
+Orlando; Sanford; Leesburg
+PPL; US|FL; Prominent5
+
+Richmond; Roanoke
+PPL; US|VA; Prominent5
+
+Arlington; Vienna; Springfield; Alexandria; Richmond; Stafford; Ashland
+PPL; US|VA; Prominent4
+
+Mount Everest; Grand Teton
+MT; _; _; Elevation3
+
+Washington, USA
+PPLC; DC|001; Prominent6
+
+New York, USA
+PPL; NY; Prominent7
+
+Los Angeles
+PPLA2; CA|037; Prominent7
+
+Arlington; Springfield; Vienna; Alexandria
+PPL; VA; Prominent5
+
+Athens; Rome; Dublin
+PPLA2; GA; Prominent5
+
+Athens; Rome; Dublin
+PPL; OH; Prominent5
