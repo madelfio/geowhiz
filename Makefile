@@ -24,3 +24,6 @@ $(DOWNLOAD_PATH)/alternateNames.txt: $(DOWNLOAD_PATH)/alternateNames.zip
 
 gaz/gaz.db: update_gaz.py $(DEPS)
 	python update_gaz.py $(DOWNLOAD_PATH)
+
+clean:
+	rm -rf $(DOWNLOAD_PATH) gaz/gaz.db

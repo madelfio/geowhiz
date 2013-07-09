@@ -7,7 +7,7 @@ TARGET_DB_FILE = './gaz.db'
 
 conn = sqlite3.connect(TARGET_DB_FILE)
 
-default_rowdata_func = lambda x: ([buffer(v) for v in l.strip().split('\t')]
+default_rowdata_func = lambda x: ([(v).decode('utf8') for v in l.strip().split('\t')]
                                   for l in x)
 
 def table(filename, tablename, tablecols, rowdata_func=default_rowdata_func,
@@ -52,7 +52,7 @@ table(
     'altname',
     '(altnameid integer, geonameid integer, isolanguage text, altname text, ' +
     'ispreferred text, isshort text, iscolloquial tex, ishistoric text)',
-    lambda x: ([buffer(v) for v in l.strip('\n').split('\t')] for l in x),
+    lambda x: ([(v).decode('utf8') for v in l.strip('\n').split('\t')] for l in x),
     [('altname_pkey', 'altnameid'), ('altname_name_idx', 'altname')]
 )
 
@@ -61,7 +61,7 @@ table(
     'admin1CodesASCII.txt',
     'admin1',
     '(country text, admin1 text, name text, asciiname text, geonameid integer)',
-    lambda x: ([buffer(v) for v in l.replace('.', '\t', 1).strip('\n').split('\t')] for l in x)
+    lambda x: ([(v).decode('utf8') for v in l.replace('.', '\t', 1).strip('\n').split('\t')] for l in x)
 )
 
 table(
@@ -69,13 +69,13 @@ table(
     'admin2',
     '(country text, admin1 text, admin2 text, name text, asciiname text,' +
     'geonameid integer)',
-    lambda x: ([buffer(v)
+    lambda x: ([(v).decode('utf8')
                 for v in l.replace('.', '\t', 2).strip('\n').split('\t')] for l in x)
 )
 
 def fill_rowdata(x):
     for l in x:
-        vals = [buffer(v) for v in l.replace('.', '\t', 1).strip('\n').split('\t')]
+        vals = [(v).decode('utf8') for v in l.replace('.', '\t', 1).strip('\n').split('\t')]
         if len(vals) == 4:
             yield vals
         else:
@@ -93,7 +93,7 @@ def process_country_rowdata(x):
     for l in x:
         if l.strip().startswith('#') or l.strip() == '':
             continue
-        vals = [buffer(v) for v in l.strip('\n').split('\t')]
+        vals = [(v).decode('utf8') for v in l.strip('\n').split('\t')]
         if len(vals) != 19:
             print repr(l)
         yield vals

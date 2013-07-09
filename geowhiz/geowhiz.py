@@ -16,6 +16,7 @@ def type_classifier(d):
 
 def geo_classifier(d):
     return [taxonomy.ROOT,
+            d['continent'],
             d['country'],
             d['admin1'] if d['admin1'] != '00' or d['country'] else None,
             d['admin2'], d['admin3'], d['admin4']]

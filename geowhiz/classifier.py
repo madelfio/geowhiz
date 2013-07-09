@@ -108,7 +108,7 @@ class Categorizer(object):
         return filter_column_results(top_results)
 
 
-resolution_sort = lambda x: (x['population'], len(x['altnames'] or ''),
+resolution_sort = lambda x: (x['population'], x['altnames'],
                              x['fcode'] == 'MT' and x['elevation'])
 
 class Resolver(object):
@@ -199,7 +199,7 @@ class ColumnClassifier(object):
     def add_training_samples(self, winner, candidates):
         raise NotImplementedError
 
-    def full_geotag(self, grid):
+    def geotag_full(self, grid):
         if grid and isinstance(grid[0], basestring):
             grid = [grid]
         all_strings = [s for col in grid for s in col]
@@ -235,12 +235,12 @@ class ColumnClassifier(object):
 
         return geotag_results
 
-    def grid_geotag(self, grid):
-        full_results = self.full_geotag(grid)
+    def geotag_grid(self, grid):
+        full_results = self.geotag_full(grid)
         return full_results[0]
 
     def column_geotag(self, column):
-        grid_results = self.grid_geotag([column])
+        grid_results = self.geotag_grid([column])
         return {'assignment': grid_results['assignment'][0],
                 'likelihood': grid_results['likelihood'],
                 'interpretations': [i
@@ -252,7 +252,7 @@ class ColumnClassifier(object):
         if grid and isinstance(grid[0], basestring):
             return self.column_geotag(grid)
         else:
-            return self.grid_geotag(grid)
+            return self.geotag_grid(grid)
 
     def _classify_column(self, column, category_list):
         raise NotImplementedError
@@ -291,8 +291,8 @@ class BayesClassifier(ColumnClassifier):
         # clear model cache
         self._cache_prob = {}
 
-    #def full_geotag(self, *args, **kwargs):
-    #    return super(BayesClassifier, self).full_geotag(*args, **kwargs)
+    #def geotag_full(self, *args, **kwargs):
+    #    return super(BayesClassifier, self).geotag_full(*args, **kwargs)
 
     def _classify_column(self, column, candidates):
         # input:
