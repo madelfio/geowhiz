@@ -17,7 +17,7 @@ page = """
   td {vertical-align: top;}
   #results td {padding-right: 10px;}
   #results th {padding: 0px 5px;}
-  #map-canvas {height: 600px; width: 750px;}
+  #map-canvas {height: 350px; width: 600px;}
   tr.cat:hover {background-color: #edd; opacity: 1.0;}
 </style>
 <div id="title">GeoWhiz - Place List Disambiguator</div>
@@ -115,11 +115,11 @@ d3.select('#submit').on('click', function() {
   d3.json('/geotag?vals=' + encodeURIComponent(txt), function(error, json) {
       d3.select('#results').style('display', 'table').selectAll('tr.cat').remove();
       var data_obj = json;
-      var data = json.response.filter(function(d, i) {
+      var data = json.assignments.filter(function(d, i) {
         return (+d['likelihood'] >= 0.0000005) || (i <= 15);
       });
       data.forEach(function(d) {
-        var cat = d.assignment[0];
+        var cat = d.categories[0];
         cat.score = +cat['normalized_prob'];
         cat.cats = (/[^|]*$/.exec(cat['category'][0]) + ', ' +
                     cat['category'][1] + ', ' +
@@ -127,7 +127,7 @@ d3.select('#submit').on('click', function() {
         cat.coverage = +cat['stats']['coverage']/+cat['stats']['total'];
         cat.opacity = Math.sqrt(Math.sqrt(cat.score)) + 0.2;
       });
-      function c(d) {return d.assignment[0];}
+      function c(d) {return d.categories[0];}
 
       var cats = d3.select('#results').selectAll('tr.cat')
                    .data(data);
@@ -168,7 +168,7 @@ d3.select('#submit').on('click', function() {
           m.setMap(null);
         });
         markers = [];
-        var pts = d3.select(this).datum().interpretations[0];
+        var pts = d3.select(this).datum().cell_interpretations[0];
         var seen = {};
         pts.forEach(function(d) {
           if (typeof seen[d['name']] === 'undefined') {
@@ -217,13 +217,13 @@ def run_web(geowhiz):
                 rows.append([row.strip()])
                 #rows.append([c.strip() for c in row.split(',')])
         grid = list(itertools.izip_longest(*rows))
-        geotag_results = geowhiz.full_geotag(grid)
+        geotag_results = geowhiz.geotag_full(grid)
 
-        for r in geotag_results:
-            for g in r['assignment']:
-                g['txt'] = category_helpers.cat_text(g['category'],
-                                                     g['stats']['total'])
+        for r in geotag_results.assignments:
+            for col in r.categories:
+                col['txt'] = geowhiz.cat_text(col['category'],
+                                              col['stats']['total'])
 
-        return jsonify({'response': geotag_results})
+        return geotag_results.toJSON()
 
     app.run(host='0.0.0.0')

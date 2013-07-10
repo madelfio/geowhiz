@@ -1,8 +1,10 @@
 import os
 import math
+import json
 
 import taxonomy
 import classifier
+import cattext
 
 ###################################################################
 # functions to extract dimension values from raw gazetteer result #
@@ -15,11 +17,10 @@ def type_classifier(d):
             d['fcode'] if d['fcode'] and len(d['fcode']) > 3 else None]
 
 def geo_classifier(d):
-    return [taxonomy.ROOT,
-            d['continent'],
-            d['country'],
-            d['admin1'] if d['admin1'] != '00' or d['country'] else None,
-            d['admin2'], d['admin3'], d['admin4']]
+    l = [taxonomy.ROOT, d['continent'], d['country'],
+         d['admin1'] if d['admin1'] != '00' or d['country'] else None,
+         d['admin2'], d['admin3'], d['admin4']]
+    return l[:-[(not i) for i in reversed(l)].index(False)]
 
 
 prominence_tree = [taxonomy.ROOT] + ['Prominent%d' % (i + 1,) for i in range(9)]
@@ -80,6 +81,7 @@ class GeoWhiz(object):
         self.gaz = gaz
         self.taxonomy = self._initialize_taxonomy()
         self.classifier = self._initialize_classifier()
+        self.cat_text = cattext.CatText(self.gaz).cat_text
 
     def _initialize_taxonomy(self):
         t = taxonomy.Taxonomy()
@@ -96,29 +98,33 @@ class GeoWhiz(object):
 
     def geotag(self, grid):
         results = self.classifier.geotag(grid)
-        print results
-        categories = []
-        cell_interpretations = []
-        return Assignment(categories, cell_interpretations)
+        return Assignment(**results)
 
     def geotag_full(self, grid):
-        categories = []
-        cell_interpretations = []
-        assignments = [Assignment(categories, cell_interpretations),
-                       Assignment(categories, cell_interpretations)]
+        results = self.classifier.geotag_full(grid)
+        assignments = [Assignment(**r) for r in results]
         return FullGeotagResults(assignments)
 
     def run_web(self):
         import web
         web.run_web(self)
 
+    def cat_text(self, category, number):
+        print repr(category), number
+        return self.cat_text(category, number)
+
 
 class FullGeotagResults(object):
     def __init__(self, assignments):
         self.assignments = assignments
 
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True)
+
 
 class Assignment(object):
-    def __init__(self, categories, cell_interpretations):
+    def __init__(self, categories, likelihood, cell_interpretations,
+                 *args, **kwargs):
         self.categories = categories
+        self.likelihood = likelihood
         self.cell_interpretations = cell_interpretations

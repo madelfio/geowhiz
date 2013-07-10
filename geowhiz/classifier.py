@@ -228,9 +228,9 @@ class ColumnClassifier(object):
             c = None #[geo_centroid([(g['latitude'], g['longitude'])
                      #          for g in i if 'likely' in g])
                  #for i in interpretations]
-            geotag_results.append({'assignment': assignment,
+            geotag_results.append({'categories': assignment,
                                    'likelihood': a_prob,
-                                   'interpretations': interpretations,
+                                   'cell_interpretations': interpretations,
                                    'centroid': c})
 
         return geotag_results

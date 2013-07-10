@@ -1,8 +1,11 @@
 Australia; Brunei; Cambodia; China
 PCLI; _; Prominent6
 
+Algeria; Libya; Egypt
+PCLI; AF; Prominent7
+
 Paris; Rome; Brussels; London; Venice
-PPL; _; Prominent6
+PPL; EU; Prominent6
 
 Washington; Oregon; Idaho; Missouri
 ADM1; US; Prominent7
