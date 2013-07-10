@@ -29,11 +29,14 @@ def table(filename, tablename, tablecols, rowdata_func=default_rowdata_func,
         rowdata = rowdata_func(f)
         cur.executemany(insert_sql, rowdata)
 
+        print 'done inserting into %s' % (tablename,)
+
         for n, c in indexes:
             cur.execute('create index %s on %s (%s)' % (n, tablename, c))
 
+        print 'done creating indexes on %s' % (tablename,)
+
         conn.commit()
-    print 'done inserting into %s' % (tablename,)
 
 table(
     'allCountries.txt',

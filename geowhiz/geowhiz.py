@@ -108,6 +108,10 @@ class GeoWhiz(object):
                        Assignment(categories, cell_interpretations)]
         return FullGeotagResults(assignments)
 
+    def run_web(self):
+        import web
+        web.run_web(self)
+
 
 class FullGeotagResults(object):
     def __init__(self, assignments):
