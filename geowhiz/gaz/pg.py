@@ -30,6 +30,7 @@ GET_CONTINENTS = """
 SELECT iso2, name, continent from gaz.country;
 """.strip()
 
+
 class pgGaz(geowhiz.Gazetteer):
     def __init__(self, db_name, db_user, db_host):
         conn_str = 'dbname=%s user=%s host=%s' % (

@@ -50,26 +50,40 @@ class Categorizer(object):
         # compute list of categories that are satisfied by some number of
         # cell values, along with the number of cells they cover
 
+        # TODO: Identify administrative region interpretations and other cells
+        # in row that are contained in those regions, as possible addition to
+        # category predicate
+
         # counts dict keeps track of number of interpretations that fall into
         # each category.
         # Example: if cat1 is satisfied by 4 interpretations of cell1, 0
         # interpretations of cell2, and 2 interpretations of cell3, then
         # counts[cat1] = [4, 2].
-        # This would result in a coverage value of 2, total of 3, and
-        # ambiguity of (4*1*2) ^ (1/3) = 2.0
+        counts = self._count_categories(column)
+
+        # Add ambiguity and coverage statistics
+        # The example above would result in a coverage value of 2, total of 3,
+        # and ambiguity of (4*1*2) ^ (1/3) = 2.0
+        results = self._add_amb_and_cov(counts, column)
+
+        # TODO: Add ambiguity resolution method
+
+        # default sort order for categories:
+        # - first sort by coverage ratio
+        # - next by the combined depth of the category over all dimensions
+        # - then by ambiguity value descending
+        return self._sort_and_filter_top_categories(results)
+
+    def _count_categories(self, column):
         counts = {}
         for cell in column:
-
             cell_counts = {}
 
             # get list of interpretations for current toponym (cell value)
             interpretations = self.geonames.get_by_name(cell)
 
             for interpretation in interpretations:
-                category_l = self.taxonomy.categorize(interpretation)
-                category_ss = category.l_to_all_s(category_l)
-                cell_cats = list(set(itertools.product(*category_ss)))
-
+                cell_cats = self._category_cartesian_product(interpretation)
                 for category_s in cell_cats:
                     if category_s not in cell_counts:
                         cell_counts[category_s] = 0
@@ -81,8 +95,15 @@ class Categorizer(object):
                 if cat not in counts:
                     counts[cat] = []
                 counts[cat].append(cnt)
+        return counts
 
-        # Add ambiguity and coverage statistics
+    def _category_cartesian_product(self, interpretation):
+        category_l = self.taxonomy.categorize(interpretation)
+        category_ss = category.l_to_all_s(category_l)
+        cell_cats = list(set(itertools.product(*category_ss)))
+        return cell_cats
+
+    def _add_amb_and_cov(self, counts, column):
         results = []
         for cat, cnts in counts.iteritems():
             amb = 1.0 * product(cnts) ** (1.0 / len(cnts))
@@ -92,13 +113,9 @@ class Categorizer(object):
                           'coverage': len(cnts),
                           'total': len(column)}
             })
+        return results
 
-        # Add ambiguity resolution method
-
-        # default sort order for categories:
-        # - first sort by coverage ratio
-        # - next by the combined depth of the category over all dimensions
-        # - then by ambiguity value descending
+    def _sort_and_filter_top_categories(self, results):
         cats_sort_key = lambda x: (x['stats']['coverage'],
                                    sum(depth(p) for p in x['category']),
                                    -x['stats']['ambiguity'])
@@ -110,6 +127,7 @@ class Categorizer(object):
 
 resolution_sort = lambda x: (x['population'], x['altnames'],
                              x['fcode'] == 'MT' and x['elevation'])
+
 
 class Resolver(object):
     def __init__(self, grid=None, geonames=None, assignment=None):
@@ -175,9 +193,13 @@ class ColumnClassifier(object):
                 true_category = [true_category]
             # Get category candidates for each column
             all_strings = [s for col in grid for s in col]
-            categorize_func = lambda x: category.l_to_s(self.taxonomy.categorize(x))
+            categorize_func = lambda x: category.l_to_s(
+                self.taxonomy.categorize(x)
+            )
             geonames = self.gaz.lookup(all_strings, categorize_func)
-            grid_candidates = Categorizer(grid, geonames, self.taxonomy).get_top_categories()
+            grid_candidates = Categorizer(
+                grid, geonames, self.taxonomy
+            ).get_top_categories()
 
             for cat_list, true_cat in zip(grid_candidates, true_category):
                 self.train_column(cat_list, true_cat)
@@ -203,11 +225,15 @@ class ColumnClassifier(object):
         if grid and isinstance(grid[0], basestring):
             grid = [grid]
         all_strings = [s for col in grid for s in col]
-        categorize_func = lambda x: category.l_to_s(self.taxonomy.categorize(x))
+        categorize_func = lambda x: category.l_to_s(
+            self.taxonomy.categorize(x)
+        )
         geonames = self.gaz.lookup(all_strings, categorize_func)
 
         # Determine possible categories for each column
-        grid_candidates = Categorizer(grid, geonames, self.taxonomy).get_top_categories()
+        grid_candidates = Categorizer(
+            grid, geonames, self.taxonomy
+        ).get_top_categories()
 
         # Determine most likely categories for each column
         category_lists = []
@@ -215,19 +241,22 @@ class ColumnClassifier(object):
             category_lists.append(self._classify_column(column, candidates))
 
         # Determine most likely category assignments for all columns in grid
+        a_list = self._get_likely_category_assignments(category_lists)
         assignments = []
-        for a_idxs, a_prob in self._get_likely_category_assignments(category_lists):
+        for a_idxs, a_prob in a_list:
             a = ([c[i] for c, i in zip(category_lists, a_idxs)], a_prob)
             assignments.append(a)
 
-        # Determine most likely interpretations for each toponym given assignment
+        # Determine most likely interpretations for each toponym given
+        # assignment
         geotag_results = []
         for assignment, a_prob in assignments:
             resolver = Resolver(grid, geonames, assignment)
             interpretations = resolver.get_all_interpretations()
-            c = None #[geo_centroid([(g['latitude'], g['longitude'])
-                     #          for g in i if 'likely' in g])
-                 #for i in interpretations]
+            c = None
+            #c = [geo_centroid([(g['latitude'], g['longitude'])
+            #                   for g in i if 'likely' in g])
+            #     for i in interpretations]
             geotag_results.append({'categories': assignment,
                                    'likelihood': a_prob,
                                    'cell_interpretations': interpretations,
@@ -265,6 +294,7 @@ class BayesClassifier(ColumnClassifier):
     def __init__(self, *args, **kwargs):
         self.model = []
         self.feature_funcs = []
+        self._cache_prob = {}
         super(BayesClassifier, self).__init__(*args, **kwargs)
 
     def set_feature_funcs(self, func_list):
@@ -281,7 +311,10 @@ class BayesClassifier(ColumnClassifier):
             # compute feature funcs for category
             func_vals = [f(cat, stats) for f in self.feature_funcs]
 
-            instance = (i == winner_idx, stats['coverage'], stats['total'], func_vals)
+            instance = (i == winner_idx,
+                        stats['coverage'],
+                        stats['total'],
+                        func_vals)
             if i == winner_idx:
                 if self.verbose:
                     print 'Found true category:'
@@ -317,7 +350,7 @@ class BayesClassifier(ColumnClassifier):
             # compute independent feature probs
             feature_probs = []
             for i, v in enumerate(func_vals):
-                p = self.feature_prob(i, v, stats['coverage'], stats['total'])
+                p = self._feature_prob(i, v, stats['coverage'], stats['total'])
                 if self.verbose:
                     print i, v
                     print p
@@ -339,9 +372,11 @@ class BayesClassifier(ColumnClassifier):
         for r in results:
             r['normalized_prob'] = r['normalized_prob'] / prob_sum
 
-        return sorted(results, key=lambda x: x['normalized_prob'], reverse=True)
+        return sorted(results,
+                      key=lambda x: x['normalized_prob'],
+                      reverse=True)
 
-    def feature_prob(self, f_idx, f_val, cov, tot):
+    def _feature_prob(self, f_idx, f_val, cov, tot):
         if (f_idx, f_val, cov, tot) in self._cache_prob:
             return self._cache_prob.get((f_idx, f_val, cov, tot))
 

@@ -1,5 +1,3 @@
-import category
-
 class Gazetteer(object):
     """Abstract base class for fetching GeoNames data"""
     def get_geoname_info(self, strings):
@@ -81,11 +79,14 @@ class Lookup(object):
                 if g['fclass'] == 'A' or last:
                     a = [g['country']]
                     a += [g['admin1'], g['admin2'], g['admin3'], g['admin4']]
-                    if None in a: a = a[:a.index(None)]
-                    if g['fcode'] and g['fcode'].startswith('PCL'): a = a[:1]
+                    if None in a:
+                        a = a[:a.index(None)]
+                    if g['fcode'] and g['fcode'].startswith('PCL'):
+                        a = a[:1]
 
                     valid = False
-                    if containers is None: valid = True
+                    if containers is None:
+                        valid = True
                     elif (a[:1] in containers or a[:2] in containers or
                           a[:3] in containers or a[:4] in containers):
                         valid = True
@@ -112,7 +113,5 @@ class Lookup(object):
             return self._category_cache[geonameid]
         else:
             cat = self.categorize_func(geoname)
-            #cat = category.l_to_s(taxonomy.categorize(geoname))
             self._category_cache[geonameid] = cat
             return cat
-

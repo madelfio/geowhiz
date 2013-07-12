@@ -42,8 +42,10 @@ SELECT name FROM admin1 WHERE country in (?) and admin1 in (?)
 """.strip()
 
 GET_CONTAINER_ADMIN2_NAME = """
-SELECT name FROM admin2 WHERE country in (?) and admin1 in (?) and admin2 in (?)
+SELECT name FROM admin2
+WHERE country in (?) and admin1 in (?) and admin2 in (?)
 """.strip()
+
 
 class sqliteGaz(geowhiz.Gazetteer):
     def __init__(self, db_filename, recreate_conn=False):
@@ -80,8 +82,6 @@ class sqliteGaz(geowhiz.Gazetteer):
         print len(res)
         return res
 
-        return cur.fetchall()
-
     def get_types(self):
         cur = self._get_conn().cursor()
         cur.execute(GET_TYPES)
@@ -101,4 +101,3 @@ class sqliteGaz(geowhiz.Gazetteer):
         cur = self._get_conn().cursor()
         cur.execute(GET_CONTAINER_ADMIN2_NAME, params)
         return cur.fetchone()
-

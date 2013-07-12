@@ -1,9 +1,11 @@
 ROOT = '_'
 
+
 class Taxonomy(object):
     """Maintains multiple dimensions"""
     def __init__(self):
         self.dimensions = []
+        self.categorizors = []
 
     def add_dimension(self, dimension):
         self.dimensions.append(dimension)
@@ -25,11 +27,14 @@ class Taxonomy(object):
                      for d, c in zip(self.dimensions, category))
 
 
+depth = lambda x: x.count('|')
+
+
 class Dimension(object):
     """A dimension for classifying toponyms"""
     def __init__(self, classifier=None, class_extractor=None):
         self.classifier = classifier or (lambda x: ROOT)
-        self.class_extractor = class_extractor or (lambda x: depth(x))
+        self.class_extractor = class_extractor or depth
 
     def categorize(self, instance):
         return self.classifier(instance)

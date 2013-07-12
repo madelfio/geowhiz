@@ -1,2 +1,2 @@
-from geowhiz import *
-from gazetteer import *
+from .geowhiz import GeoWhiz
+from .gazetteer import Gazetteer

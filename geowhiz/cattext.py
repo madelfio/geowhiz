@@ -5,7 +5,9 @@ locale.setlocale(locale.LC_ALL, 'en_US.utf8')
 ROOT = '_'
 GEONAME_CONTAINERS = {'_|NA|US': 'USA'}
 STATIC = {'_|NA|US': 'the United States'}
-fmt = lambda x: 'in %s' % (STATIC.get(x, GEONAME_CONTAINERS.get(x, 'UNKNOWN')),)
+fmt = lambda x: 'in %s' % (
+    STATIC.get(x, GEONAME_CONTAINERS.get(x, 'UNKNOWN')),
+)
 
 CONTINENTS = {
     'NA': 'North America',
@@ -16,6 +18,7 @@ CONTINENTS = {
     'OC': 'Oceania',
     'AN': 'Antarctica'
 }
+
 
 class CatText(object):
 
@@ -28,15 +31,13 @@ class CatText(object):
         Return information about the fclass/fcode specified.
         """
         default = {'type': 'place', 'plural': 'places'}
+
         if type_code == ROOT:
             t = default
-
         elif type_code == ROOT + '|A|ADM':
             t = {'type': 'administrative region',
-                    'plural': 'administrative regions'}
-
+                 'plural': 'administrative regions'}
         else:
-
             if len(self.geoname_types) == 0:
                 print 'LOADING GEONAME TYPE STRINGS'
                 self.geoname_types = load_geoname_types(self.gaz)
@@ -47,7 +48,6 @@ class CatText(object):
             return t['plural']
         else:
             return t['type']
-
 
     def prominence_text(self, prominence_s):
         if prominence_s == ROOT:
@@ -60,7 +60,6 @@ class CatText(object):
             grouping=True
         )
         return ('with population ≥ %s' % (val,)).decode('utf8')
-
 
     def geo_text(self, geo_s):
         if geo_s == ROOT:
@@ -100,10 +99,9 @@ class CatText(object):
 
         return fmt(k)
 
-
     def cat_text(self, cat_s, cnt=2):
         # Handle type
-        type_txt = self.lookup_type_code(cat_s[0], plural=(cnt>1))
+        type_txt = self.lookup_type_code(cat_s[0], plural=(cnt > 1))
 
         # Handle prominence
         prom_txt = self.prominence_text(cat_s[2])
@@ -114,24 +112,39 @@ class CatText(object):
         return ' '.join(t for t in (type_txt, prom_txt, geo_txt) if t)
 
 
-plural_map = {
-    'country, state, region,...': 'countries, states, or administrative regions',
-    'stream, lake, ...': 'streams, lakes, or hydrological features',
-    'parks,area, ...': 'parks or areas',
-    'city, village,...': 'cities or villages',
-    'road, railroad': 'roads or railroads',
-    'spot, building, farm': 'spots, buildings, or farms',
-    'mountain,hill,rock,...': 'mountains, hills, or rocky areas',
-    'undersea': 'undersea areas',
-    'forest,heath,...': 'forests or areas of vegetation',
-}
-
 def load_geoname_types(gaz):
-    types = []
+    types = [
+        {'t1': 'A', 't2': None, 't3': None, 'desc': '',
+         'type': 'Administrative region',
+         'plural': 'Administrative regions'},
+        {'t1': 'H', 't2': None, 't3': None, 'desc': '',
+         'type': 'stream, lake, or hydrological feature',
+         'plural': 'streams, lakes, or hydrological features'},
+        {'t1': 'L', 't2': None, 't3': None, 'desc': '',
+         'type': 'park or area', 'plural': 'parks or areas'},
+        {'t1': 'P', 't2': None, 't3': None, 'desc': '',
+         'type': 'city or village',
+         'plural': 'cities or villages'},
+        {'t1': 'R', 't2': None, 't3': None, 'desc': '',
+         'type': 'road or railroad',
+         'plural': 'roads or railroads'},
+        {'t1': 'S', 't2': None, 't3': None, 'desc': '',
+         'type': 'spot, building, or farm',
+         'plural': 'spots, buildings, or farms'},
+        {'t1': 'T', 't2': None, 't3': None, 'desc': '',
+         'type': 'mountain, hill, or rocky area',
+         'plural': 'mountains, hills, or rocky areas'},
+        {'t1': 'U', 't2': None, 't3': None, 'desc': '',
+         'type': 'undersea area',
+         'plural': 'undersea areas'},
+        {'t1': 'V', 't2': None, 't3': None, 'desc': '',
+         'type': 'forest or area of vegetation',
+         'plural': 'forests or areas of vegetation'},
+    ]
     geoname_types_raw = list(gaz.get_types())
     for fclass, fcode, name, description in geoname_types_raw:
-        if not fclass or not name: continue
-        fcode1 = fcode[:3]
+        if not fclass or not name:
+            continue
         types.append({'t1': fclass,
                       't2': fcode[:3],
                       't3': fcode,
@@ -140,15 +153,11 @@ def load_geoname_types(gaz):
 
     # add plurals column
     for t in types:
-        s = t['type']
-        if not s:
+        if 'plural' in t or 'type' not in t:
             continue
+        s = t['type']
         last = s.split()[-1]
         p = None
-
-        if s in plural_map:
-            t['plural'] = plural_map[s]
-            continue
 
         # Handle:
         # - 'seat of government of a political entity'
@@ -158,7 +167,6 @@ def load_geoname_types(gaz):
             s = 'seats of' + s[len('seat of a'):]
         elif 'capital of a' in s:
             s = s.replace('capital of a', 'capitals of')
-
 
         if last[-2:] in ['sh', 'ch', 'ss']:
             p = s + 'es'

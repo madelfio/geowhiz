@@ -10,34 +10,42 @@ import cattext
 # functions to extract dimension values from raw gazetteer result #
 ###################################################################
 
+
 def type_classifier(d):
     return [taxonomy.ROOT,
             d['fclass'],
             (d.get('fcode') or '')[:3] or None,
             d['fcode'] if d['fcode'] and len(d['fcode']) > 3 else None]
 
+
 def geo_classifier(d):
     l = [taxonomy.ROOT, d['continent'], d['country'],
          d['admin1'] if d['admin1'] != '00' or d['country'] else None,
          d['admin2'], d['admin3'], d['admin4']]
-    return l[:-[(not i) for i in reversed(l)].index(False)]
+    # remove trailing Nones
+    return l[:-[(not v) for v in reversed(l)].index(False)]
 
 
-prominence_tree = [taxonomy.ROOT] + ['Prominent%d' % (i + 1,) for i in range(9)]
+prominence_tree = ([taxonomy.ROOT] +
+                   ['Prominent%d' % (i + 1,) for i in range(9)])
+
 
 def prominence_classifier(d):
-    if (d.get('population', 0) or 0) == 0:
+    if 'population' not in d or d['population'] == 0:
         prom = 0
     else:
         prom = int(math.log10(d['population'])) + 1
     return prominence_tree[:prom + 1]
 
+
 #############################################
 # feature functions for Bayesian classifier #
 #############################################
 
+
 depth = lambda x: x.count('|')
 amb_log = lambda x: math.floor(math.log(x) / math.log(1.1))
+
 
 feature_funcs = [
     lambda x, y: '_',  # dummy feature to test coverage probability
@@ -55,9 +63,11 @@ feature_funcs = [
     lambda x, y: (x[0].startswith(taxonomy.ROOT+'|P'), depth(x[2])),
 ]
 
+
 ###############################################
 # prepare classifier using training data file #
 ###############################################
+
 
 def load_training_set():
     cur_dir = os.path.dirname(os.path.realpath(__file__))
@@ -72,16 +82,18 @@ def load_training_set():
             training_set.append((toponyms, cat))
     return training_set
 
+
 ##################################
 # primary object for geowhiz API #
 ##################################
+
 
 class GeoWhiz(object):
     def __init__(self, gaz):
         self.gaz = gaz
         self.taxonomy = self._initialize_taxonomy()
         self.classifier = self._initialize_classifier()
-        self.cat_text = cattext.CatText(self.gaz).cat_text
+        self.cat_text_func = cattext.CatText(self.gaz).cat_text
 
     def _initialize_taxonomy(self):
         t = taxonomy.Taxonomy()
@@ -111,7 +123,7 @@ class GeoWhiz(object):
 
     def cat_text(self, category, number):
         print repr(category), number
-        return self.cat_text(category, number)
+        return self.cat_text_func(category, number)
 
 
 class FullGeotagResults(object):
