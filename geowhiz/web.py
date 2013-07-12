@@ -25,7 +25,7 @@ page = """
 <table><tr>
 <td style="width: 450px; height: 300px">
   <div>Enter List of Places</div>
-  <form action="geotag" method="get">
+  <form>
   <div>
   <textarea id="vals" style="width: 400px; height: 200px">
 Washington
@@ -112,7 +112,7 @@ var data_obj;
 var markers = [];
 d3.select('#submit').on('click', function() {
   var txt = d3.select('#vals').property('value');
-  d3.json('/geotag?vals=' + encodeURIComponent(txt), function(error, json) {
+  d3.json('./geotag?vals=' + encodeURIComponent(txt), function(error, json) {
       d3.select('#results').style('display', 'table').selectAll('tr.cat').remove();
       var data_obj = json;
       var data = json.assignments.filter(function(d, i) {
@@ -200,9 +200,8 @@ google.maps.event.addDomListener(window, 'load', initializeMap);
 </script>
 """
 
-def run_web(geowhiz):
+def create_app(geowhiz):
     app = Flask(__name__)
-    app.debug = True
 
     @app.route('/')
     def index():
@@ -226,4 +225,4 @@ def run_web(geowhiz):
 
         return geotag_results.toJSON()
 
-    app.run(host='0.0.0.0')
+    return app

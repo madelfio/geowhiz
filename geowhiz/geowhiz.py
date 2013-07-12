@@ -105,9 +105,9 @@ class GeoWhiz(object):
         assignments = [Assignment(**r) for r in results]
         return FullGeotagResults(assignments)
 
-    def run_web(self):
+    def web_app(self):
         import web
-        web.run_web(self)
+        return web.create_app(self)
 
     def cat_text(self, category, number):
         print repr(category), number
