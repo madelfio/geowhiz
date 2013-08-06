@@ -1,3 +1,4 @@
+import itertools
 import sqlite3
 import geowhiz
 
@@ -46,6 +47,10 @@ SELECT name FROM admin2
 WHERE country in (?) and admin1 in (?) and admin2 in (?)
 """.strip()
 
+# a helper function to avoid "too many SQL variables" error
+def chunks(l, n):
+    for i in xrange(0, len(l), n):
+        yield l[i:i+n]
 
 class sqliteGaz(geowhiz.Gazetteer):
     def __init__(self, db_filename, recreate_conn=False):
@@ -71,7 +76,8 @@ class sqliteGaz(geowhiz.Gazetteer):
     def get_geoname_info(self, strings):
         cur = self._get_conn().cursor()
         param_sub = ', '.join('?' for i in strings)
-        print strings
+        if len(strings) > 320:
+            return itertools.chain(*(self.get_geoname_info(s) for s in chunks(strings, 320)))
         get_gaz_data = GET_GAZ_DATA % (param_sub, param_sub, param_sub)
         cur.execute(get_gaz_data, strings * 3)
 
@@ -79,7 +85,7 @@ class sqliteGaz(geowhiz.Gazetteer):
         for r in res:
             r['altnames'] = r['altnames'].count(',')
             r['continent'] = self.continents.get(r['country'])
-        print len(res)
+        #print len(res)
         return res
 
     def get_types(self):
