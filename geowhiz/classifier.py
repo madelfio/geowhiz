@@ -244,7 +244,7 @@ class ColumnClassifier(object):
         a_list = self._get_likely_category_assignments(category_lists)
         assignments = []
         for a_idxs, a_prob in a_list:
-            a = ([c[i] for c, i in zip(category_lists, a_idxs)], a_prob)
+            a = ([c[i] for c, i in zip(category_lists, a_idxs) if c], a_prob)
             assignments.append(a)
 
         # Determine most likely interpretations for each toponym given
