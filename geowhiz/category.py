@@ -18,7 +18,7 @@ def l_to_s(lists):
 def l_to_all_s(lists):
     dimensions = []
     for d in lists:
-        dimensions.append(['|'.join(str(n) for n in d[:i+1])
+        dimensions.append(['|'.join(unicode(n) for n in d[:i+1])
                            for i in range(len(d))
                            if d[i] is not None])
     return dimensions
