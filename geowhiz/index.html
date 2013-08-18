@@ -190,12 +190,14 @@ function showPts(pts) {
   var marker_divs = d3.selectAll('div.marker').data(pts, function(d) {return d.name;});
 
   marker_divs
+      .style('opacity', 0.5)
     .transition()
-    .style('left', function(d) {return d.xy.x + 'px';})
-    .style('top', function(d) {return d.xy.y + 'px';})
-    .each(function(d) {
-      markers[d.name].position = d.position;
-    });
+      .style('left', function(d) {return d.xy.x + 'px';})
+      .style('top', function(d) {return d.xy.y + 'px';})
+      .each(function(d) {markers[d.name].position = d.position;})
+      .each('end', function() {
+        d3.select(this).style('opacity', 1.0);
+      });
 
   marker_divs.enter()[0].forEach(function(p) {
     var d = p.__data__;
