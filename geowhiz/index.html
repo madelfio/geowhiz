@@ -2,30 +2,38 @@
 
 <style>
   html {height: 100%; font-family: sans;}
-  body {background-color: #eee; height: 90%;}
+  body {background-color: #eee; height: 100%; min-height:100%; margin:0;}
   #title {
     font-size: 36px;
     text-align: center;
-    font-family: time;
+    font-family: "Helvetica Neue",Georgia;
     font-variant: small-caps;
+    background-color: #468;
+    color: #eee;
+    line-height: 1.8;
   }
-  #content {background-color: #fff; width: 1100px; margin: 0 auto; min-height: 100%;}
-  table {margin-left:auto; margin-right:auto;}
+  #content {
+    background-color: #fff; width: 1100px; margin: 0 auto; min-height: 100%;
+    box-shadow: 0 0 25px #777;
+  }
+  table {margin-left:auto; margin-right:auto; border-collapse:collapse;}
   td {vertical-align: top;}
-  #results td {padding-right: 10px;}
-  #results th {padding: 0px 5px;}
+  #header {background: #eee;}
+  #vals {font-family:"Andale Mono",monospace;}
+  #results td {padding: 1px 15px;}
+  #results th {padding: 0px 10px; font-weight: normal}
   #map-canvas {height: 350px; width: 600px;}
   tr.cat:hover {background-color: #edd; opacity: 1.0;}
 </style>
 
-<div id="title">GeoWhiz - Place List Disambiguator</div>
 <div id="content">
+<div id="title">GeoWhiz - Place List Disambiguator</div>
 <table><tr>
 <td style="width: 450px; height: 300px">
-  <div>Enter List of Places</div>
+  <div>Enter List of Places:</div>
   <form>
   <div>
-  <textarea id="vals" style="width: 400px; height: 200px">
+  <textarea id="vals" style="width: 300px; height: 200px">
 Washington
 New York</textarea>
   </div>
@@ -37,7 +45,7 @@ New York</textarea>
 <tr>
 <td colspan="2" style="width: auto">
   <table id="results" style="display: none; max-height: 400px; overflow: auto;">
-  <tr><th>Category</th><th>Coverage</th><th>Ambiguity</th><th>Likelihood</th></tr>
+  <tr id="header"><th>Category</th><th>Coverage</th><th>Ambiguity</th><th>Likelihood</th></tr>
   </table>
 </td>
 </tr></table>
@@ -63,6 +71,8 @@ function Label(opt_options) {
     'top: -3px; left: -3px; background: brown; border-radius: 3px;';
 
   var div = this.div_ = document.createElement('div');
+  div.classList.add('marker');
+  div.__data__ = opt_options.__data__;
   div.appendChild(span);
   div.appendChild(span2);
   div.style.cssText = 'position: absolute; display: none';
@@ -109,7 +119,7 @@ Label.prototype.draw = function() {
 
 /* GeoWhiz UI */
 var data_obj;
-var markers = [];
+var markers = {};
 d3.select('#submit').on('click', function() {
   var txt = d3.select('#vals').property('value');
   d3.json('./geotag?vals=' + encodeURIComponent(txt), function(error, json) {
@@ -129,12 +139,11 @@ d3.select('#submit').on('click', function() {
     });
     function c(d) {return d.categories[0];}
 
-    var cats = d3.select('#results').selectAll('tr.cat').data(data);
+    var cats = d3.select('#results > tbody').selectAll('tr.cat').data(data);
     var score_fmt = d3.format('.2%');
     var fmt = d3.format('.2f');
 
-    var trs = cats.enter()
-      .append('tr')
+    var trs = cats.enter().append('tr')
         .attr('class', 'cat')
         .style('opacity', function(d) {return c(d).opacity;})
         .style('cursor', 'pointer');
@@ -159,28 +168,57 @@ d3.select('#submit').on('click', function() {
         .style('text-align', 'right');
 
     trs.on('click', function() {
-      // clear markers
-      markers.forEach(function(m) {
-        m.setMap(null);
+      var pts = d3.select(this).datum().cell_interpretations[0],
+          seen = {};
+
+      pts = pts.filter(function(p) {
+        if (!(p.name in seen)) {seen[p.name] = true; return true;}
+        return false;
       });
-      markers = [];
-      var pts = d3.select(this).datum().cell_interpretations[0];
-      var seen = {};
-      pts.forEach(function(d) {
-        if (!(d.name in seen)) {
-          markers.push(new Label({
-            map: map,
-            position: new google.maps.LatLng(+d.latitude, +d.longitude),
-            text: d.name
-          }));
-          seen[d.name] = true;
-        }
+
+      pts.forEach(function(p) {
+        p.position = new google.maps.LatLng(+p.latitude, +p.longitude);
+        p.xy = proj().fromLatLngToDivPixel(p.position);
       });
+      showPts(pts);
     });
   });
   d3.event.preventDefault();
 });
-var map;
+
+function showPts(pts) {
+  var marker_divs = d3.selectAll('div.marker').data(pts, function(d) {return d.name;});
+
+  marker_divs
+    .transition()
+    .style('left', function(d) {return d.xy.x + 'px';})
+    .style('top', function(d) {return d.xy.y + 'px';})
+    .each(function(d) {
+      markers[d.name].position = d.position;
+    });
+
+  marker_divs.enter()[0].forEach(function(p) {
+    var d = p.__data__;
+    d.__marker__ = new Label({
+      map: map,
+      position: new google.maps.LatLng(+d.latitude, +d.longitude),
+      text: d.name,
+      __data__: d
+    });
+    markers[d.name] = d.__marker__;
+  });
+
+  marker_divs.exit()
+    .each(function(d) {
+      markers[d.name].setMap(null);
+      delete markers[d.name];
+    })
+    .remove();
+}
+
+var map,
+    proj;
+
 function initializeMap() {
   var mapOptions = {
     center: new google.maps.LatLng(10, 0),
@@ -189,6 +227,15 @@ function initializeMap() {
     streetViewControl: false
   };
   map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+
+  // hack to get easy access to projection
+  // from http://stackoverflow.com/questions/1538681/
+  overlay = new google.maps.OverlayView();
+  overlay.draw = function() {};
+  overlay.setMap(map);
+  proj = function() {
+    return overlay.getProjection();
+  };
 }
 google.maps.event.addDomListener(window, 'load', initializeMap);
 </script>
