@@ -100,14 +100,25 @@ class CatText(object):
         return fmt(k)
 
     def cat_text(self, cat_s, cnt=2):
+        type_txt = prom_txt = geo_txt = None
+
+        cat_t, cat_g, cat_p = cat_s
+
+        if cat_t.endswith('|ADM1') and '|NA|US' in cat_g:
+            type_txt = 'states' if cnt > 1 else 'state'
+        elif cat_t.endswith('|ADM2') and '|NA|US' in cat_g:
+            type_txt = 'counties' if cnt > 1 else 'county'
+        elif cat_t.endswith('|PPL') and cat_p.count('|') > 4:
+            type_txt = 'cities' if cnt > 1 else 'city'
+
         # Handle type
-        type_txt = self.lookup_type_code(cat_s[0], plural=(cnt > 1))
+        type_txt = type_txt or self.lookup_type_code(cat_s[0], plural=(cnt > 1))
 
         # Handle prominence
-        prom_txt = self.prominence_text(cat_s[2])
+        prom_txt = prom_txt or self.prominence_text(cat_s[2])
 
         # Handle geo container
-        geo_txt = self.geo_text(cat_s[1])
+        geo_txt = geo_txt or self.geo_text(cat_s[1])
 
         return ' '.join(t for t in (type_txt, prom_txt, geo_txt) if t)
 

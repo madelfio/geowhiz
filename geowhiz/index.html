@@ -191,7 +191,7 @@ function showPts(pts) {
 
   marker_divs
       .style('opacity', 0.5)
-    .transition()
+    .transition().duration(150)
       .style('left', function(d) {return d.xy.x + 'px';})
       .style('top', function(d) {return d.xy.y + 'px';})
       .each(function(d) {markers[d.name].position = d.position;})
