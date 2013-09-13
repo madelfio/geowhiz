@@ -87,10 +87,16 @@ Label.prototype.onAdd = function() {
   // Ensures the label is redrawn if the text or position is changed.
   var me = this;
   this.listeners_ = [
-    google.maps.event.addListener(this, 'position_changed',
-                                  function() { me.draw(); }),
-                                  google.maps.event.addListener(this, 'text_changed',
-                                                                function() { me.draw(); })
+    google.maps.event.addListener(
+      this,
+      'position_changed',
+      function() { me.draw(); }
+    ),
+    google.maps.event.addListener(
+      this,
+      'text_changed',
+      function() { me.draw(); }
+    )
   ];
 };
 
