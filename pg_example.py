@@ -1,7 +1,7 @@
 import geowhiz
 from geowhiz.gaz.pg import pgGaz
 
-gaz = pgGaz('hybrid2', 'marco', 'sametdb00')
+gaz = pgGaz('datname', 'user', 'hostname')
 
 g = geowhiz.GeoWhiz(gaz=gaz)
 
