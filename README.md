@@ -27,7 +27,7 @@ than the more populated places with the same names from around the world.
 
 ### Setup
 
-Running GeoWhiz requires Python 2.6/2.6.  First get the repository:
+Running GeoWhiz locally requires Python 2.6 or 2.7.  First get the repository:
 
     git clone https://github.com/madelfio/geowhiz.git
 
@@ -38,9 +38,11 @@ minutes to run on my laptop):
     cd geowhiz
     make
 
-To run the web interface, first install the required python packages (`pip
-install requirements.txt`, assuming you have pip installed).  Then:
+In order to run the web interface, install the required python packages (`pip
+install requirements.txt`, assuming you have [pip](http://pip-installer)
+installed).  Then:
 
     python web.py
 
-And head to <http://localhost:5000/> to test it out.
+This runs as a local HTTP server, defaulting to port 5000.  Head to
+<http://localhost:5000/> to test it out.

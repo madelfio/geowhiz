@@ -2,7 +2,7 @@ GEONAMES_DUMP_URL = http://download.geonames.org/export/dump
 DOWNLOAD_PATH = /tmp/geowhiz-downloads
 DEPS = $(addprefix $(DOWNLOAD_PATH)/,allCountries.txt alternateNames.txt admin1CodesASCII.txt admin2Codes.txt featureCodes_en.txt countryInfo.txt)
 
-ALL: gaz/gaz.db
+ALL: gaz.db
 
 $(DOWNLOAD_PATH)/:
 	mkdir -p $(DOWNLOAD_PATH)
@@ -22,8 +22,8 @@ $(DOWNLOAD_PATH)/allCountries.txt: $(DOWNLOAD_PATH)/allCountries.zip
 $(DOWNLOAD_PATH)/alternateNames.txt: $(DOWNLOAD_PATH)/alternateNames.zip
 	unzip -u $< -d $(DOWNLOAD_PATH)
 
-gaz/gaz.db: update_gaz.py $(DEPS)
+gaz.db: update_gaz.py $(DEPS)
 	python update_gaz.py $(DOWNLOAD_PATH)
 
 clean:
-	rm -rf $(DOWNLOAD_PATH) gaz/gaz.db
+	rm -rf $(DOWNLOAD_PATH) gaz.db

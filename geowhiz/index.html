@@ -51,7 +51,7 @@ New York</textarea>
 </tr></table>
 </div>
 
-<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC35erx3rMr4iTIE_AghLsYYKvuAs150PA&sensor=false"></script>
+<script src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
 <script src="//d3js.org/d3.v3.js"></script>
 <script>
 // Define the overlay, derived from google.maps.OverlayView
@@ -224,8 +224,7 @@ function showPts(pts) {
     .remove();
 }
 
-var map,
-    proj;
+var map, proj;
 
 function initializeMap() {
   var mapOptions = {
