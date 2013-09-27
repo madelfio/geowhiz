@@ -1,8 +1,9 @@
-# GeoWhiz
+## GeoWhiz
 
-A place list disambiguator.
+A place list disambiguator.  Powers the site at
+<http://geowhiz.umiacs.umd.edu/>.
 
-For example, if you enter the list:
+As an example, if you enter the list:
 
     Arlington
     Alexandria
@@ -10,7 +11,7 @@ For example, if you enter the list:
     Vienna
 
 GeoWhiz will give you results like these (your results may be different due to
-classifier tweaks):
+classification model tweaks):
 
 | Category                                                       | Likelihood |
 | -------------------------------------------------------------- | ---------- |
