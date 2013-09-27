@@ -39,7 +39,7 @@ minutes to run on my laptop):
     make
 
 In order to run the web interface, install the required python packages (`pip
-install requirements.txt`, assuming you have [pip](http://pip-installer)
+install -r requirements.txt`, assuming you have [pip](http://pip-installer)
 installed).  Then:
 
     python web.py
