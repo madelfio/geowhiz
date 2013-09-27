@@ -45,3 +45,18 @@ PPLA2; GA; Prominent5
 
 Athens; Rome; Dublin
 PPL; OH; Prominent5
+
+Monterosso; Vernazza; Corniglia; Manarola; Riomaggiore
+PPL; IT|08|SP; Prominent3
+
+Lincoln Memorial; Washington Monument
+MNMT; DC|001; _
+
+Belluno Airport; Linate Airport; Naples International Airport
+AIR; IT; _
+
+Memphis; Jackson; Nashville; Clarksville; Cleveland
+PPL; US; Prominent6
+
+Riva del Garda; Sirmione; Genoa; Florence; Verona
+PPL; IT; Prominent4
