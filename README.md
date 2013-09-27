@@ -26,19 +26,20 @@ than the more populated places with the same names from around the world.
 
 ### Setup
 
-To run GeoWhiz yourself, clone the repository.
+Running GeoWhiz requires Python 2.6/2.6.  First get the repository:
 
-Then run:
+    git clone https://github.com/madelfio/geowhiz.git
 
-    $ make
+Then use the included Makefile to build a SQLite gazetteer database based on
+the current [GeoNames](http://www.geonames.org/) database (this takes ~20
+minutes to run on my laptop):
 
-to download the GeoNames database and transform it into a SQLite gazetteer
-database (this takes ~30 minutes to run on my laptop).
+    cd geowhiz
+    make
 
-To run the web interface:
+To run the web interface, first install the required python packages (`pip
+install requirements.txt`, assuming you have pip installed).  Then:
 
-    $ cd geowhiz
-    $ python web.py
+    python web.py
 
-
-
+And head to <http://localhost:5000/> to test it out.

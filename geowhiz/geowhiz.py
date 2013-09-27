@@ -122,7 +122,6 @@ class GeoWhiz(object):
         return web.create_app(self)
 
     def cat_text(self, category, number):
-        print repr(category), number
         return self.cat_text_func(category, number)
 
 
