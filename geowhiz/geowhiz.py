@@ -23,7 +23,21 @@ def geo_classifier(d):
          d['admin1'] if d['admin1'] != '00' or d['country'] else None,
          d['admin2'], d['admin3'], d['admin4']]
     # remove trailing Nones
-    return l[:-[(not v) for v in reversed(l)].index(False)]
+    # unrolled list comprehension for speed & to fix "Paris" bug
+    if d['admin4']:
+        return l
+    elif d['admin3']:
+        return l[:-1]
+    elif d['admin2']:
+        return l[:-2]
+    elif d['admin1']:
+        return l[:-3]
+    elif d['country']:
+        return l[:-4]
+    elif d['continent']:
+        return l[:-5]
+    else:
+        return l[:-6]
 
 
 prominence_tree = ([taxonomy.ROOT] +

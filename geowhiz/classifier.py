@@ -363,14 +363,15 @@ class BayesClassifier(ColumnClassifier):
                             'stats': stats,
                             'final_prob': final_prob})
 
-        # normalize probs
+        # scale probs
         prob_sum = sum(r['final_prob'] for r in results)
         for r in results:
-            r['normalized_prob'] = math.sqrt(r['final_prob'] / prob_sum)
+            r['scaled_prob'] = (r['final_prob'] / prob_sum) ** 0.75
 
-        prob_sum = sum(r['normalized_prob'] for r in results)
+        # normalize probs
+        prob_sum = sum(r['scaled_prob'] for r in results)
         for r in results:
-            r['normalized_prob'] = r['normalized_prob'] / prob_sum
+            r['normalized_prob'] = r['scaled_prob'] / prob_sum
 
         return sorted(results,
                       key=lambda x: x['normalized_prob'],
