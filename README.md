@@ -1,7 +1,6 @@
 ## GeoWhiz
 
-A place list disambiguator.  Powers the site at
-<http://geowhiz.umiacs.umd.edu/>.
+A place list disambiguator.  Powers <http://geowhiz.umiacs.umd.edu/>.
 
 As an example, if you enter the list:
 
