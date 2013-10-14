@@ -19,10 +19,12 @@ classification model tweaks):
 | populated places with population ≥ 10 in South Dakota, USA     | 22.13%     |
 | ...                                                            | ...        |
 
-Along with each category will be specific geographic interpretations of each
-place name in your list.  In this case, the category possibilities help to
-identify that the list is most likely to refer to cities in Virginia, rather
-than the more populated places with the same names from around the world.
+A Bayesian classifier is used to generate the likelihood values for each
+category, which in turn determines a set of specific geographic
+interpretations of each place name in your list.  For this example, the
+category possibilities help to identify that the list is most likely to refer
+to cities in Virginia, rather than the more populated places with the same
+names from around the world.
 
 ### Setup
 
