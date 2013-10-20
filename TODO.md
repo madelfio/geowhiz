@@ -5,3 +5,10 @@
   - Then, when computing cartesian product of categories that satisfy, also
     take categories w/ presence or absence of each containment predicate
     (new quasi-dimension).
+
+Tree Visualization
+- Sort place names by order in submitted list
+- Highlight chosen category
+- Highlight category components when node is hovered
+- Make unlikely interpretations dim
+- Space between different place names

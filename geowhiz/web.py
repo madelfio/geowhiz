@@ -9,6 +9,10 @@ def create_app(geowhiz):
     def index():
         return send_file('index.html')
 
+    @app.route('/geowhiz.js')
+    def js():
+        return send_file('geowhiz.js')
+
     @app.route('/geotag')
     def geotag():
         vals = request.args.get('vals', '')

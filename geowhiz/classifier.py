@@ -152,6 +152,9 @@ class Resolver(object):
     def _get_col_interpretations(self, column, cat, fetch_all=False):
         """
         Computes top candidate categories for a column of values.
+
+        fetch_all parameter determines if all interpretations are returned.
+        When false, only the most likely interpretation is included in result.
         """
 
         interpretations = []
@@ -162,7 +165,9 @@ class Resolver(object):
                 g_cat = self.geonames.get_category(g)
                 #g_cat = category_helpers.l_to_s(taxonomy.categorize(g))
                 if category.satisfies_s(g_cat, cat['category']):
-                    cell_interpretations.append(dict(g))
+                    return_val = dict(g)
+                    return_val['cat'] = g_cat
+                    cell_interpretations.append(return_val)
 
             cell_interpretations.sort(key=resolution_sort, reverse=True)
             if len(cell_interpretations) > 0:

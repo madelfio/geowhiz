@@ -24,6 +24,14 @@
   #results th {padding: 0px 10px; font-weight: normal}
   #map-canvas {height: 350px; width: 600px;}
   tr.cat:hover {background-color: #edd; opacity: 1.0;}
+
+  .node circle {fill: #fff; stroke: steelblue; stroke-width: 1.5px;}
+  .node {font: 10px sans-serif;}
+  .link {fill: none; stroke: #ccc; stroke-width: 2px;}
+
+  .place {font: 12px sans-serif;}
+  .place circle {fill: #aaa; stroke: steelblue; stroke-width: 1.5px;}
+  .place-link {fill: none; stroke-width: 1.5px;}
 </style>
 
 <div id="content">
@@ -48,201 +56,13 @@ New York</textarea>
   <tr id="header"><th>Category</th><th>Coverage</th><th>Ambiguity</th><th>Likelihood</th></tr>
   </table>
 </td>
+<tr></tr>
+<td colspan="2" style="width: auto">
+  <svg id="tree-svg"></svg>
+</td>
 </tr></table>
 </div>
 
 <script src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
 <script src="//d3js.org/d3.v3.js"></script>
-<script>
-// Define the overlay, derived from google.maps.OverlayView
-function Label(opt_options) {
-  // Initialization
-  this.setValues(opt_options);
-
-  // Label specific
-  var span = this.span_ = document.createElement('span');
-  //span.style.cssText = 'position: relative; left: -50%; top: -8px; ' +
-  span.style.cssText = 'position: relative; left: -50%; top: 8px; ' +
-    'white-space: nowrap; border: 1px solid blue; ' +
-    'padding: 2px; border-radius: 3px; background-color: rgba(255, 255, 255, 0.9);';
-
-  var span2 = this.span2_ = document.createElement('span');
-  span2.style.cssText = 'position: absolute; height: 6px; width: 6px; ' +
-    'top: -3px; left: -3px; background: brown; border-radius: 3px;';
-
-  var div = this.div_ = document.createElement('div');
-  div.classList.add('marker');
-  div.__data__ = opt_options.__data__;
-  div.appendChild(span);
-  div.appendChild(span2);
-  div.style.cssText = 'position: absolute; display: none';
-};
-Label.prototype = new google.maps.OverlayView;
-
-// Implement onAdd
-Label.prototype.onAdd = function() {
-  var pane = this.getPanes().overlayLayer;
-  pane.appendChild(this.div_);
-
-  // Ensures the label is redrawn if the text or position is changed.
-  var me = this;
-  this.listeners_ = [
-    google.maps.event.addListener(
-      this,
-      'position_changed',
-      function() { me.draw(); }
-    ),
-    google.maps.event.addListener(
-      this,
-      'text_changed',
-      function() { me.draw(); }
-    )
-  ];
-};
-
-// Implement onRemove
-Label.prototype.onRemove = function() {
-  this.div_.parentNode.removeChild(this.div_);
-
-  // Label is removed from the map, stop updating its position/text.
-  for (var i = 0, I = this.listeners_.length; i < I; ++i) {
-    google.maps.event.removeListener(this.listeners_[i]);
-  }
-};
-
-// Implement draw
-Label.prototype.draw = function() {
-  var projection = this.getProjection();
-  var position = projection.fromLatLngToDivPixel(this.get('position'));
-
-  var div = this.div_;
-  div.style.left = position.x + 'px';
-  div.style.top = position.y + 'px';
-  div.style.display = 'block';
-
-  this.span_.innerHTML = this.get('text').toString();
-};
-
-/* GeoWhiz UI */
-var data_obj;
-var markers = {};
-d3.select('#submit').on('click', function() {
-  var txt = d3.select('#vals').property('value');
-  d3.json('./geotag?vals=' + encodeURIComponent(txt), function(error, json) {
-    d3.select('#results').style('display', 'table').selectAll('tr.cat').remove();
-    var data_obj = json;
-    var data = json.assignments.filter(function(d, i) {
-      return (+d.likelihood >= 0.0000005) || (i <= 15);
-    });
-    data.forEach(function(d) {
-      var cat = d.categories[0];
-      cat.score = +cat.normalized_prob;
-      cat.cats = (/[^|]*$/.exec(cat.category[0]) + ', ' +
-                  cat.category[1] + ', ' +
-                  /[^|]*$/.exec(cat.category[2]));
-      cat.coverage = (+cat.stats.coverage) / (+cat.stats.total);
-      cat.opacity = Math.sqrt(Math.sqrt(cat.score)) + 0.2;
-    });
-    function c(d) {return d.categories[0];}
-
-    var cats = d3.select('#results > tbody').selectAll('tr.cat').data(data);
-    var score_fmt = d3.format('.2%');
-    var fmt = d3.format('.2f');
-
-    var trs = cats.enter().append('tr')
-        .attr('class', 'cat')
-        .style('opacity', function(d) {return c(d).opacity;})
-        .style('cursor', 'pointer');
-
-    var categories = trs.append('td')
-        .text(function(d) {return c(d).txt;})
-        .attr('title', function(d) {return c(d).cats;});
-
-    var cov = trs.append('td')
-        .text(function(d) {return fmt(c(d).coverage);})
-        .style('min-width', '45px')
-        .style('text-align', 'right');
-
-    var amb = trs.append('td')
-        .text(function(d) {return fmt(c(d).stats.ambiguity);})
-        .style('min-width', '50px')
-        .style('text-align', 'right');
-
-    var scores = trs.append('td')
-        .text(function(d) {return score_fmt(c(d).score);})
-        .style('width', '60px')
-        .style('text-align', 'right');
-
-    trs.on('click', function() {
-      var pts = d3.select(this).datum().cell_interpretations[0],
-          seen = {};
-
-      pts = pts.filter(function(p) {
-        if (!(p.name in seen)) {seen[p.name] = true; return true;}
-        return false;
-      });
-
-      pts.forEach(function(p) {
-        p.position = new google.maps.LatLng(+p.latitude, +p.longitude);
-        p.xy = proj().fromLatLngToDivPixel(p.position);
-      });
-      showPts(pts);
-    });
-  });
-  d3.event.preventDefault();
-});
-
-function showPts(pts) {
-  var marker_divs = d3.selectAll('div.marker').data(pts, function(d) {return d.name;});
-
-  marker_divs
-      .style('opacity', 0.5)
-    .transition().duration(150)
-      .style('left', function(d) {return d.xy.x + 'px';})
-      .style('top', function(d) {return d.xy.y + 'px';})
-      .each(function(d) {markers[d.name].position = d.position;})
-      .each('end', function() {
-        d3.select(this).style('opacity', 1.0);
-      });
-
-  marker_divs.enter()[0].forEach(function(p) {
-    var d = p.__data__;
-    d.__marker__ = new Label({
-      map: map,
-      position: new google.maps.LatLng(+d.latitude, +d.longitude),
-      text: d.name,
-      __data__: d
-    });
-    markers[d.name] = d.__marker__;
-  });
-
-  marker_divs.exit()
-    .each(function(d) {
-      markers[d.name].setMap(null);
-      delete markers[d.name];
-    })
-    .remove();
-}
-
-var map, proj;
-
-function initializeMap() {
-  var mapOptions = {
-    center: new google.maps.LatLng(10, 0),
-    zoom: 1,
-    mapTypeId: google.maps.MapTypeId.ROADMAP,
-    streetViewControl: false
-  };
-  map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
-
-  // hack to get easy access to projection
-  // from http://stackoverflow.com/questions/1538681/
-  overlay = new google.maps.OverlayView();
-  overlay.draw = function() {};
-  overlay.setMap(map);
-  proj = function() {
-    return overlay.getProjection();
-  };
-}
-google.maps.event.addDomListener(window, 'load', initializeMap);
-</script>
+<script src="geowhiz.js"></script>
