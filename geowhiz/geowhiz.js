@@ -235,6 +235,13 @@ function fitBounds(pts) {
   pts.forEach(function(p) {
     bounds.extend(new google.maps.LatLng(+p.latitude, +p.longitude));
   });
+  // Don't zoom in too far on only one marker
+  if (bounds.getNorthEast().equals(bounds.getSouthWest())) {
+     var extendPoint1 = new google.maps.LatLng(bounds.getNorthEast().lat() + 0.01, bounds.getNorthEast().lng() + 0.01);
+     var extendPoint2 = new google.maps.LatLng(bounds.getNorthEast().lat() - 0.01, bounds.getNorthEast().lng() - 0.01);
+     bounds.extend(extendPoint1);
+     bounds.extend(extendPoint2);
+  }
   map.fitBounds(bounds);
 }
 
