@@ -1,3 +1,9 @@
+/* global document */
+/* global window */
+/* global google */
+/* global d3 */
+/* global console */
+/* jshint globalstrict: true */
 "use strict";
 
 // Define the overlay, derived from google.maps.OverlayView
@@ -22,8 +28,8 @@ function Label(opt_options) {
   div.appendChild(span);
   div.appendChild(span2);
   div.style.cssText = 'position: absolute; display: none';
-};
-Label.prototype = new google.maps.OverlayView;
+}
+Label.prototype = new google.maps.OverlayView();
 
 // Implement onAdd
 Label.prototype.onAdd = function() {
@@ -33,16 +39,12 @@ Label.prototype.onAdd = function() {
   // Ensures the label is redrawn if the text or position is changed.
   var me = this;
   this.listeners_ = [
-    google.maps.event.addListener(
-      this,
-      'position_changed',
-      function() { me.draw(); }
-    ),
-    google.maps.event.addListener(
-      this,
-      'text_changed',
-      function() { me.draw(); }
-    )
+    google.maps.event.addListener(this, 'position_changed', function() {
+      me.draw();
+    }),
+    google.maps.event.addListener(this, 'text_changed', function() {
+      me.draw();
+    })
   ];
 };
 
@@ -69,13 +71,34 @@ Label.prototype.draw = function() {
   this.span_.innerHTML = this.get('text').toString();
 };
 
+/* Map Options UI */
+var fit_to_pts = false,
+    show_all_pts = false;
+d3.select('#zoom-to-points').on('change', function() {
+  fit_to_pts = this.checked;
+  if (fit_to_pts) {updatePts();}
+});
+d3.select('#show-all-points').on('change', function() {
+  show_all_pts = this.checked;
+  updatePts();
+});
+
+function reveal(sel) {
+  d3.select(sel)
+      .style('display', null)
+      .style('visibility', null)
+    .transition()
+      .style('opacity', 1.0);
+}
 
 /* GeoWhiz UI */
 var data_obj;
 var markers = {};
+var cat_data = {};
 d3.select('#submit').on('click', function() {
   var txt = d3.select('#vals').property('value');
   d3.json('./geotag?vals=' + encodeURIComponent(txt), function(error, json) {
+    reveal('#results-container');
     d3.select('#results').style('display', 'table').selectAll('tr.cat').remove();
     var data_obj = json;
     var data = json.assignments.filter(function(d, i) {
@@ -121,37 +144,61 @@ d3.select('#submit').on('click', function() {
         .style('text-align', 'right');
 
     trs.on('click', function(d) {
-      showTrees(d);
-
-      var pts = d.cell_interpretations[0],
-          seen = {};
-
-      pts = pts.filter(function(p) {
-        if (!(p.name in seen)) {seen[p.name] = true; return true;}
-        else {return false;}
-      });
-
-      pts.forEach(function(p) {
-        p.position = new google.maps.LatLng(+p.latitude, +p.longitude);
-        p.xy = proj().fromLatLngToDivPixel(p.position);
-      });
-      showPts(pts);
+      cat_data = d;
+      showTrees(cat_data);
+      updatePts(cat_data);
     });
   });
   d3.event.preventDefault();
 });
 
+function updatePts() {
+  var pts = cat_data.cell_interpretations[0],
+      seen = {};
+
+  pts.forEach(function(p) {
+    p.position = new google.maps.LatLng(+p.latitude, +p.longitude);
+    p.xy = proj().fromLatLngToDivPixel(p.position);
+  });
+
+  if (!show_all_pts) {
+    pts = pts.filter(function(p) {return !!p.likely;});
+  }
+
+  showPts(pts);
+  if (fit_to_pts) {fitBounds(pts);}
+}
+
 function showPts(pts) {
-  var marker_divs = d3.selectAll('div.marker').data(pts, function(d) {return d.name;});
+  pts.forEach(function(d) {
+    d.old_id = d.id;
+    if (show_all_pts) {d.id = 'gid' + d.geonameid;}
+    else {d.id = d.name;}
+  });
+
+  var marker_divs = d3.selectAll('div.marker')
+      .data(pts, function(d) {return d.id;});
 
   marker_divs
       .style('opacity', 0.5)
     .transition().duration(150)
       .style('left', function(d) {return d.xy.x + 'px';})
       .style('top', function(d) {return d.xy.y + 'px';})
-      .each(function(d) {markers[d.name].position = d.position;})
+      .each(function(d) {
+        if (!(d.id in markers)) {
+          markers[d.id] = markers[d.old_id];
+          delete markers[d.old_id];
+        }
+        markers[d.id].position = d.position;
+      })
       .each('end', function() {
-        d3.select(this).style('opacity', 1.0);
+        d3.select(this)
+            .each(function (d) {
+              d.xy = proj().fromLatLngToDivPixel(d.position);
+            })
+            .style('opacity', 1.0)
+            .style('left', function(d) {return d.xy.x + 'px';})
+            .style('top', function(d) {return d.xy.y + 'px';});
       });
 
   marker_divs.enter()[0].forEach(function(p) {
@@ -162,25 +209,43 @@ function showPts(pts) {
       text: d.name,
       __data__: d
     });
-    markers[d.name] = d.__marker__;
+    markers[d.id] = d.__marker__;
   });
 
   marker_divs.exit()
     .each(function(d) {
-      markers[d.name].setMap(null);
-      delete markers[d.name];
+      if (d.id in markers) {
+        markers[d.id].setMap(null);
+        delete markers[d.id];
+      } else {
+        if (d.old_id in markers) {
+          markers[d.old_id].setMap(null);
+          delete markers[d.old_id];
+        } else {
+          console.log('d.id: ' + d.id + ', d.old_id: ' + d.old_id + ', markers: ' + JSON.stringify(Object.keys(markers)));
+        }
+      }
     })
     .remove();
+}
+
+function fitBounds(pts) {
+  if (!pts.length) {return;}
+  var bounds = new google.maps.LatLngBounds();
+  pts.forEach(function(p) {
+    bounds.extend(new google.maps.LatLng(+p.latitude, +p.longitude));
+  });
+  map.fitBounds(bounds);
 }
 
 //
 // taxonomy tree visualization
 //
 
-var width = 800,
-    place_list_width = 200,
+var width = 650,
+    place_list_width = 80,
     height = 500,
-    node_width = 80,
+    node_width = 70,
     node_height = 30;
 
 var tree = d3.layout.tree()
@@ -190,11 +255,22 @@ var tree = d3.layout.tree()
 var diagonal = d3.svg.diagonal()
     .projection(function(d) { return [d.y, d.x]; });
 
+function connector(d, i) {
+  var p0 = d.source,
+      p3 = d.target,
+      m1 = (2*p0.y/3 + p3.y/3),
+      m2 = (p0.y/3 + 2*p3.y/3),
+      p = [p0, {x: p0.x, y: m1}, {x: p3.x, y: m2}, p3];
+  p = p.map(diagonal.projection());
+  return 'M' + p[0] + 'C' + p[1] + ' ' + p[2] + ' ' + p[3];
+}
+
+
 var svg = d3.selectAll('#tree-svg')
     .attr('width', width + place_list_width)
-    .attr('height', height)
+    .attr('height', height);
 var tax = svg.append('g')
-    .attr('transform', 'translate(30,' + node_height + ')');
+    .attr('transform', 'translate(-25,' + node_height + ')');
 
 function showTrees(assignment) {
   // process pts into tree fmt
@@ -210,17 +286,21 @@ function showTrees(assignment) {
     var s = code.join('|'),
         ps = code.slice(code.length - 1).join('|'),
         parent = null;
-    if (s == '') { throw new Error('something went wrong'); }
+    if (s === '') { throw new Error('something went wrong'); }
     if (s in hierarchy_lookup) { return hierarchy_lookup[s]; }
     if (code.length == 1) { parent = root;}
     else if (!(ps in hierarchy_lookup)) {
       parent = addElement(code.slice(0, code.length - 1));
     } else { parent = hierarchy_lookup[s]; }
+    var name = code[code.length-1];
+    if (name == 'dim0') {name = 'Place';}
+    else if (name == 'dim1') {name = 'Earth';}
+    else if (name == 'dim2') {name = 'Pop ≥ 0';}
     var new_element = {
-      'name': code[code.length-1],
+      'name': name,
       'code': s,
       'children': []
-    }
+    };
     parent.children.push(new_element);
     hierarchy_lookup[s] = new_element;
     return new_element;
@@ -262,8 +342,8 @@ function showTrees(assignment) {
     }
   });
   var dim0_offset = -dim0_min;
-  var dim1_offset = dim0_max - dim1_min + 2 * node_height + dim0_offset;
-  var dim2_offset = dim1_max - dim2_min + 2 * node_height + dim1_offset;
+  var dim1_offset = dim0_max - dim1_min + 2.5 * node_height + dim0_offset;
+  var dim2_offset = dim1_max - dim2_min + 2.5 * node_height + dim1_offset;
   nodes.forEach(function(n) {
     if (n.code.indexOf('dim0') != -1) {
       n.x += dim0_offset;
@@ -273,18 +353,23 @@ function showTrees(assignment) {
       n.x += dim2_offset;
     }
   });
+  //nodes.forEach(function(n) {
+  //  n.x += n.depth * 3;
+  //});
 
   //
   // Add place list and edges
   //
   var place_nodes = [],
-      place_edges = [];
+      place_edges = [],
+      offset = 0;
 
   pts.forEach(function(d, i) {
     var place = {};
     place.pt = d;
-    place.x = i * node_height;
-    place.y = width;
+    if (d.likely) {offset += node_height;}
+    place.x = i * node_height + offset;
+    place.y = width + node_width / 2.0;
     place_nodes.push(place);
     var t1 = node_lookup[['dim0'].concat(d.cat[0].split('|').slice(1)).join('|')],
         t2 = node_lookup[['dim1'].concat(d.cat[1].split('|').slice(1)).join('|')],
@@ -295,7 +380,15 @@ function showTrees(assignment) {
     place_edges.push({'source': place, 'target': t3});
   });
 
-  svg.attr('height', Math.max(height, dim2_max + dim2_offset + node_height * 2));
+  var place_max = d3.max(place_nodes, function(d) {return d.x;});
+  var max_height = Math.max(dim2_max + dim2_offset, place_max);
+  console.log(place_max);
+  console.log(max_height);
+
+  //svg.attr('height', Math.max(height, dim2_max + dim2_offset + node_height * 2));
+  reveal('#tree-container');
+  reveal('#map-container');
+  svg.attr('height', max_height + node_height * 2);
 
   tax.selectAll('path.link').remove();
   tax.selectAll('g.node').remove();
@@ -312,25 +405,38 @@ function showTrees(assignment) {
       .data(place_edges)
     .enter().append("path")
       .attr("class", "place-link")
-      .attr('stroke', function(d) {return d3.rgb(color(d.source.pt.name)).brighter();})
-      .attr('stroke-width', function(d) {return d.source.pt.likely ? '2px' : '1px';})
-      .attr("d", diagonal);
+      .attr('stroke', function(d) {
+        return d3.rgb(color(d.source.pt.name)).brighter();
+      })
+      .attr('d', connector);
 
-  var nodes = tax.selectAll("g.node")
+  place_link
+      .filter(function(d) {return d.source.pt.likely;})
+      .attr('stroke-width', '3px');
+
+  place_link
+      .filter(function(d) {return !d.source.pt.likely;})
+      .attr('stroke-width', '1px')
+      .attr('opacity', '0.5')
+      .attr('stroke-dasharray', '2,2');
+
+  var node_group = tax.selectAll("g.node")
       .data(nodes, function(d) {return d.code;});
 
-  nodes.exit().remove();
+  node_group.exit().remove();
 
-  var node = nodes.enter().append("g")
+  var node = node_group.enter().append("g")
       .attr("class", "node")
-      .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; })
+      .attr("transform", function(d) {
+        return "translate(" + d.y + "," + d.x + ")";
+      });
 
   node.append("circle")
       .attr("r", 4.5);
 
   node.append("text")
-      .attr("dx", -8)
-      .attr("dy", 10)
+      .attr("x", -5)
+      .attr("y", 12)
       .attr("text-anchor", "end")
       .text(function(d) { return d.name; });
 
@@ -339,14 +445,19 @@ function showTrees(assignment) {
 
   var place = places.enter().append('g')
       .attr('class', 'place')
-      .attr('transform', function(d) {return 'translate(' + d.y + ',' + d.x + ')';});
+      .attr('transform', function(d) {
+        return 'translate(' + d.y + ',' + d.x + ')';
+      });
+
+  place.filter(function(d) {return !d.pt.likely;})
+      .attr('opacity', 0.7);
 
   place.append('circle')
       .attr('r', 4.5);
 
   place.append('text')
-      .attr('dx', 8)
-      .attr('dy', 3)
+      .attr('x', 8)
+      .attr('y', 3)
       .text(function(d) {return d.pt.name;});
 }
 
