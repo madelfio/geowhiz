@@ -70,10 +70,10 @@ feature_funcs = [
     lambda x, y: (depth(x[1]), depth(x[2])),
     lambda x, y: (depth(x[1]), amb_log(y['ambiguity'])),
     lambda x, y: y['ambiguity'] < 1.00001,
+    lambda x, y: y['ambiguity'] < 1.2,
     lambda x, y: 1.00001 <= y['ambiguity'] < 1.3,
     lambda x, y: 1.3 <= y['ambiguity'] < 1.75,
-    #lambda x, y: 1.75 <= y['ambiguity'] < 2.5,
-    #lambda x, y: 2.5 <= y['ambiguity'],
+    lambda x, y: 1.75 <= y['ambiguity'],
     lambda x, y: (x[0].startswith(taxonomy.ROOT+'|P'), depth(x[2])),
 ]
 

@@ -111,7 +111,7 @@ d3.select('#submit').on('click', function() {
                   cat.category[1] + ', ' +
                   /[^|]*$/.exec(cat.category[2]));
       cat.coverage = (+cat.stats.coverage) / (+cat.stats.total);
-      cat.opacity = Math.sqrt(Math.sqrt(cat.score)) + 0.2;
+      cat.opacity = Math.sqrt(Math.sqrt(cat.score))*0.7 + 0.3;
     });
     function c(d) {return d.categories[0];}
 
