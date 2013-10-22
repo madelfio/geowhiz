@@ -11,4 +11,6 @@ Tree Visualization
 - Highlight chosen category
 - Highlight category components when node is hovered
 - Make unlikely interpretations dim
-- Space between different place names
+- XSpace between different place names
+- XReveal fieldsets when active
+- Don't zoom too much for single points

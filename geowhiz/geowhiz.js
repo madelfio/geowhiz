@@ -87,7 +87,7 @@ function reveal(sel) {
   d3.select(sel)
       .style('display', null)
       .style('visibility', null)
-    .transition()
+    .transition().duration(600)
       .style('opacity', 1.0);
 }
 
@@ -284,7 +284,12 @@ function showTrees(assignment) {
   var cat = assignment.categories[0].category,
       pts = assignment.cell_interpretations[0];
 
-  var color = d3.scale.category10();
+  //var color = d3.scale.category10();
+  var color = d3.scale.ordinal()
+      .range(["#8cf64b", "#17becf", "#d62728", "#7f7f7f", "#e377c2",
+             "#c49c94", "#98df8a", "#c7c7c7", "#2ca02c", "#dbdb8d",
+             "#1f77b4", "#ff7f0e", "#ff9896", "#c5b0d5", "#bcbd22",
+             "#9467bd", "#9edae5", "#aec7e8"]);
 
   var root = {'name': 'Taxonomy', 'children': []};
   var hierarchy_lookup = {};
@@ -413,17 +418,17 @@ function showTrees(assignment) {
     .enter().append("path")
       .attr("class", "place-link")
       .attr('stroke', function(d) {
-        return d3.rgb(color(d.source.pt.name)).brighter();
+        return d3.rgb(color(d.source.pt.name)).brighter(0.1);
       })
       .attr('d', connector);
 
   place_link
       .filter(function(d) {return d.source.pt.likely;})
-      .attr('stroke-width', '3px');
+      .attr('stroke-width', '2px');
 
   place_link
       .filter(function(d) {return !d.source.pt.likely;})
-      .attr('stroke-width', '1px')
+      .attr('stroke-width', '1.5px')
       .attr('opacity', '0.5')
       .attr('stroke-dasharray', '2,2');
 

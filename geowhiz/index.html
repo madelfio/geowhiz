@@ -3,6 +3,11 @@
 <style>
   html {height: 100%; font-family: sans;}
   body {background-color: #eee; height: 100%; min-height:100%; margin:0;}
+  #content {
+    background-color: #fff; width: 1250px; margin: 0 auto; min-height: 100%;
+    box-shadow: 0 0 25px #777;
+    overflow: auto;
+  }
   #title {
     font-size: 36px;
     text-align: center;
@@ -12,17 +17,19 @@
     color: #eee;
     line-height: 1.8;
   }
-  #content {
-    background-color: #fff; width: 1250px; margin: 0 auto; min-height: 100%;
-    box-shadow: 0 0 25px #777;
-    overflow:auto;
-  }
-  #outer {
-    position:relative;
-  }
   table {margin-left:auto; margin-right:auto; border-collapse:collapse;}
   td {vertical-align: top;}
   #header {background: #eee;}
+  fieldset {border: 1px solid #ccc; border-radius: 5px;}
+  legend {
+    font-family:"Helvetica Neue", Georgia;
+    font-variant: small-caps;
+    font-size: 1.2em;
+    color: #468;
+    font-weight: bold;
+  }
+  textarea {border: 1px solid #ccc; border-radius: 2px;}
+
   #vals {font-family:"Andale Mono",monospace;}
   #results td {padding: 1px 15px; font-size: 11pt;}
   #results th {padding: 0px 10px; font-weight: normal}
@@ -35,14 +42,14 @@
 
   .place {font: 12px sans-serif;}
   .place circle {fill: #aaa; stroke: steelblue; stroke-width: 1.5px;}
-  .place-link {fill: none; stroke-width: 1.5px;}
+  .place-link {fill: none;}
 
-  #place-list-input-container {position:absolute; left:3px; top: 3px; width:310px;}
+  #place-list-input-container {position:static; float: left; width:310px;}
   #place-list-input-container div {height: 260px; overflow:auto;}
-  #results-container {position:absolute; right: 3px; top: 3px; width: 830px;}
+  #results-container {position:static; float:right; right: 3px; top: 3px; width: 850px;}
   #results-container div {height: 260px; overflow: auto;}
-  #tree-container {position:absolute; right: 3px; top: 300px; width: 730px;}
-  #map-container {position:absolute; left: 3px; top: 300px;}
+  #tree-container {position:static; float:right; width: 740px;}
+  #map-container {position:static; float:left;}
   #map-options {font-size:10pt; color: #555;}
 </style>
 
@@ -71,6 +78,8 @@ Rome</textarea>
       </table>
     </div>
   </fieldset>
+  <div>
+  </div>
   <fieldset id="tree-container" style="display:none; opacity: 0">
     <legend>Category Tree</legend>
     <svg id="tree-svg"></svg>
@@ -84,7 +93,7 @@ Rome</textarea>
         <span>Zoom to points</span>
       </label>&nbsp;&nbsp;
       <label><input type="checkbox" id="show-all-points">
-        <span>Show all points</span>
+        <span>Show all possible interpretations</span>
       </label>
     </div>
   </fieldset>
