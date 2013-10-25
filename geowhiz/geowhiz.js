@@ -249,8 +249,8 @@ function fitBounds(pts) {
 // taxonomy tree visualization
 //
 
-var width = 650,
-    place_list_width = 80,
+var width = 640,
+    place_list_width = 90,
     height = 500,
     node_width = 70,
     node_height = 30;
@@ -271,6 +271,10 @@ function connector(d, i) {
   p = p.map(diagonal.projection());
   return 'M' + p[0] + 'C' + p[1] + ' ' + p[2] + ' ' + p[3];
 }
+
+// from http://bl.ocks.org/mbostock/6738109
+var superscript = "⁰¹²³⁴⁵⁶⁷⁸⁹",
+    formatPower = function(d) { return (d + "").split("").map(function(c) { return superscript[c]; }).join(""); };
 
 
 var svg = d3.selectAll('#tree-svg')
@@ -308,6 +312,9 @@ function showTrees(assignment) {
     if (name == 'dim0') {name = 'Place';}
     else if (name == 'dim1') {name = 'Earth';}
     else if (name == 'dim2') {name = 'Pop ≥ 0';}
+    else if (name.indexOf('Prominent') == 0) {
+      name = 'Pop ≥ 10' + formatPower(+name.slice(name.length-1) - 1);
+    }
     var new_element = {
       'name': name,
       'code': s,
