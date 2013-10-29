@@ -14,3 +14,7 @@ Tree Visualization
 - XSpace between different place names
 - XReveal fieldsets when active
 - Don't zoom too much for single points
+
+
+- Add resolution_method to all geotag methods (e.g., geowhiz.geotag in
+  addition to geowhiz.geotag_full)

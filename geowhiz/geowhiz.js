@@ -155,6 +155,15 @@ d3.select('#submit').on('click', function() {
         .style('text-align', 'right');
 
     trs.on('click', function(d) {
+      trs
+        .style('background-color', 'white')
+        .style('color', null)
+        .style('opacity', function(d) {return c(d).opacity;});
+      d3.select(this)
+        .style('background-color', 'red')
+        .style('color', 'white')
+        .style('opacity', function(d) {return c(d).opacity * 2;});
+
       cat_data = d;
       showTrees(cat_data);
       updatePts(cat_data);
@@ -192,7 +201,7 @@ function showPts(pts) {
 
   marker_divs
       .style('opacity', 0.5)
-    .transition().duration(150)
+    .transition()
       .style('left', function(d) {return d.xy.x + 'px';})
       .style('top', function(d) {return d.xy.y + 'px';})
       .each(function(d) {
@@ -261,7 +270,7 @@ function fitBounds(pts) {
 //
 
 var width = 640,
-    place_list_width = 90,
+    place_list_width = 110,
     height = 500,
     node_width = 70,
     node_height = 30;
@@ -323,7 +332,7 @@ function showTrees(assignment) {
     if (name == 'dim0') {name = 'Place';}
     else if (name == 'dim1') {name = 'Earth';}
     else if (name == 'dim2') {name = 'Pop ≥ 0';}
-    else if (name.indexOf('Prominent') == 0) {
+    else if (name.indexOf('Prominent') === 0) {
       name = 'Pop ≥ 10' + formatPower(+name.slice(name.length-1) - 1);
     }
     var new_element = {
