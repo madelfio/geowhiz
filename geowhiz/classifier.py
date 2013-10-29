@@ -128,34 +128,146 @@ class Categorizer(object):
 resolution_sort = lambda x: (x['population'], x['altnames'],
                              x['fcode'] == 'MT' and x['elevation'])
 
+def add_proximity_resolution(interpretations):
+    toRadians = lambda x: x * math.pi / 180
+    radius = 6371  # km
+
+    cache_pt = {}
+    cache_dist = {}
+    def geo_dist(pt1, pt2):
+        if (pt1, pt2) in cache_dist:
+            return cache_dist[(pt1, pt2)]
+        if pt1 in cache_pt:
+            lat1, lng1, lat1cos = cache_pt[pt1]
+        else:
+            lat1 = toRadians(pt1[0])
+            lng1 = toRadians(pt1[1])
+            lat1cos = math.cos(lat1)
+            cache_pt[pt1] = (lat1, lng1, lat1cos)
+        lat2 = toRadians(pt2[0])
+        lng2 = toRadians(pt2[1])
+        lat2cos = math.cos(lat2)
+
+        dlat = lat2 - lat1
+        dlng = lng2 - lng1
+
+        a = math.sin(dlat/2) ** 2 + math.sin(dlng/2) ** 2 * lat1cos * lat2cos
+        res = radius * 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+        cache_dist[(pt1, pt2)] = res
+        return res
+
+    cache_coord = {}
+    def geo_coord(lat, lng):
+        if (lat, lng) in cache_coord:
+            return cache_coord[(lat, lng)]
+        phi = (90 - lat) * math.pi / 180
+        theta = (lng) * math.pi / 180
+        x = math.sin(phi) * math.cos(theta)
+        y = math.sin(phi) * math.sin(theta)
+        z = math.cos(phi)
+        cache_coord[(lat, lng)] = (x, y, z)
+        return x, y, z
+
+    def geo_centroid(lat_lng_list):
+        xs = []
+        ys = []
+        zs = []
+        for lat, lng in lat_lng_list:
+            x, y, z = geo_coord(lat, lng)
+            xs.append(x)
+            ys.append(y)
+            zs.append(z)
+        x_c = sum(xs)
+        y_c = sum(ys)
+        z_c = sum(zs)
+        l = len(xs)
+        r = math.sqrt(x_c**2 + y_c**2 + z_c**2) / l
+        phi_c = math.acos(z_c / (l * r))
+        theta_c = math.atan2(y_c, x_c)
+        lat_c = 90 - 180 * (phi_c / math.pi)
+        lng_c = 180 * theta_c / math.pi
+        return (lat_c, lng_c)
+
+    def geo_mean_sq_dist(interp_list):
+        coord_list = [(i['latitude'], i['longitude']) for i in interp_list]
+
+        c = geo_centroid(coord_list)
+        sq_dists = [geo_dist(c, pt) ** 2 for pt in coord_list]
+        return (sum(sq_dists) / len(sq_dists))
+
+    # add two most prominent interpretations of each toponym as "seeds" for
+    # proximity testing
+    seeds = []
+    for wi in interpretations:
+        seeds.extend(wi[:2])
+
+    # iterate through all seeds, adding closest interpretation of each other
+    # toponym.  for each collection of interpretations, measure distance of
+    # each to the centroid of the collection.  collection that minimizes the
+    # sum of square distances "wins" and the respective interpretations are
+    # selected by the "proximity" method
+    best = []
+    best_dist = float('inf')
+    for s in seeds:
+        interp_set = []
+        for interp_list in interpretations:
+            best_interp = None
+            best_interp_dist = float('inf')
+            for i in interp_list:
+                i_dist = geo_dist((s['latitude'], s['longitude']),
+                                  (i['latitude'], i['longitude']))
+                if i_dist < best_interp_dist:
+                    best_interp = i
+                    best_interp_dist = i_dist
+            if best_interp:
+                interp_set.append(best_interp)
+        mean_sq_dist = geo_mean_sq_dist(interp_set)
+        if mean_sq_dist < best_dist:
+            best = interp_set
+            best_dist = mean_sq_dist
+
+    # annotate likely interpretations with 'prox_likely' attribute
+    for i in best:
+        i['prox_likely'] = True
+
+    return
+
 
 class Resolver(object):
-    def __init__(self, grid=None, geonames=None, assignment=None):
+    def __init__(self, grid=None, geonames=None, assignment=None, method=None):
         self.grid = grid
         self.geonames = geonames
         self.assignment = assignment  # category for each column
+        self.method = method
 
-    def get_interpretations(self, fetch_all=False):
+    def get_interpretations(self, fetch_all=False, method='both'):
         """
         Returns possible interpretations for each cell, based on column
         category
         """
         interpretations = [
-            self._get_col_interpretations(column, cat, fetch_all=fetch_all)
+            self._get_col_interpretations(column, cat, fetch_all=fetch_all,
+                                          method=method)
             for column, cat in zip(self.grid, self.assignment)
         ]
         return interpretations
 
-    def get_all_interpretations(self):
-        return self.get_interpretations(fetch_all=True)
+    def get_all_interpretations(self, method='both'):
+        return self.get_interpretations(fetch_all=True, method=method)
 
-    def _get_col_interpretations(self, column, cat, fetch_all=False):
+    def _get_col_interpretations(self, column, cat, fetch_all=False,
+                                 method=None):
         """
-        Computes top candidate categories for a column of values.
+        Identifies top candidate interpretations within a category for a column
+        of values.
 
         fetch_all parameter determines if all interpretations are returned.
         When false, only the most likely interpretation is included in result.
+
+        method parameter specifies resolution method.  It can be one of three
+        values: ['prominence', 'proximity', 'both'].
         """
+        method = method or self.method or 'proximity'
 
         interpretations = []
 
@@ -163,22 +275,30 @@ class Resolver(object):
             cell_interpretations = []
             for g in self.geonames.get_by_name(cell):
                 g_cat = self.geonames.get_category(g)
-                #g_cat = category_helpers.l_to_s(taxonomy.categorize(g))
                 if category.satisfies_s(g_cat, cat['category']):
                     return_val = dict(g)
                     return_val['cat'] = g_cat
                     cell_interpretations.append(return_val)
 
             cell_interpretations.sort(key=resolution_sort, reverse=True)
-            if len(cell_interpretations) > 0:
-                cell_interpretations[0]['likely'] = True
+            if method in ['both', 'prominence']:
+                if len(cell_interpretations) > 0:
+                    cell_interpretations[0]['likely'] = True
 
             if fetch_all:
-                interpretations.extend(cell_interpretations)
+                interpretations.append(cell_interpretations)
             else:
-                interpretations.append(cell_interpretations[0])
+                interpretations.append([cell_interpretations[0]])
 
-        return interpretations
+        if method in ['both', 'proximity']:
+            add_proximity_resolution(interpretations)
+
+        # flatten list
+        flat_interpretations = []
+        for i in interpretations:
+            flat_interpretations.extend(i)
+
+        return flat_interpretations
 
 
 class ColumnClassifier(object):
@@ -226,7 +346,7 @@ class ColumnClassifier(object):
     def add_training_samples(self, winner, candidates):
         raise NotImplementedError
 
-    def geotag_full(self, grid):
+    def geotag_full(self, grid, resolution_method=None):
         if grid and isinstance(grid[0], basestring):
             grid = [grid]
         all_strings = [s for col in grid for s in col]
@@ -256,7 +376,8 @@ class ColumnClassifier(object):
         # assignment
         geotag_results = []
         for assignment, a_prob in assignments:
-            resolver = Resolver(grid, geonames, assignment)
+            resolver = Resolver(grid, geonames, assignment,
+                                method=resolution_method)
             interpretations = resolver.get_all_interpretations()
             c = None
             #c = [geo_centroid([(g['latitude'], g['longitude'])

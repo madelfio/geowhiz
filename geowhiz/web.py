@@ -22,7 +22,7 @@ def create_app(geowhiz):
                 rows.append([row.strip()])
                 #rows.append([c.strip() for c in row.split(',')])
         grid = list(itertools.izip_longest(*rows))
-        geotag_results = geowhiz.geotag_full(grid)
+        geotag_results = geowhiz.geotag_full(grid, 'both')
 
         for r in geotag_results.assignments:
             for col in r.categories:

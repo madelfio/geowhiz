@@ -126,8 +126,9 @@ class GeoWhiz(object):
         results = self.classifier.geotag(grid)
         return Assignment(**results)
 
-    def geotag_full(self, grid):
-        results = self.classifier.geotag_full(grid)
+    def geotag_full(self, grid, resolution_method=None):
+        results = self.classifier.geotag_full(grid,
+                                              resolution_method=resolution_method)
         assignments = [Assignment(**r) for r in results]
         return FullGeotagResults(assignments)
 

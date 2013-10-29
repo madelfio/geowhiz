@@ -72,14 +72,20 @@ Label.prototype.draw = function() {
 };
 
 /* Map Options UI */
-var fit_to_pts = false,
-    show_all_pts = false;
+var fit_to_pts = true,
+    show_all_pts = false,
+    prox_resolution = false;
 d3.select('#zoom-to-points').on('change', function() {
   fit_to_pts = this.checked;
   if (fit_to_pts) {updatePts();}
 });
 d3.select('#show-all-points').on('change', function() {
   show_all_pts = this.checked;
+  updatePts();
+});
+d3.select('#prox-resolution').on('change', function() {
+  prox_resolution = this.checked;
+  showTrees(cat_data);
   updatePts();
 });
 
@@ -89,6 +95,11 @@ function reveal(sel) {
       .style('visibility', null)
     .transition().duration(600)
       .style('opacity', 1.0);
+}
+
+function isHighlighted(pt) {
+  if (prox_resolution) {return !!pt.prox_likely;}
+  else {return !!pt.likely;}
 }
 
 /* GeoWhiz UI */
@@ -162,7 +173,7 @@ function updatePts() {
   });
 
   if (!show_all_pts) {
-    pts = pts.filter(function(p) {return !!p.likely;});
+    pts = pts.filter(function(p) {return isHighlighted(p);});
   }
 
   showPts(pts);
@@ -430,11 +441,11 @@ function showTrees(assignment) {
       .attr('d', connector);
 
   place_link
-      .filter(function(d) {return d.source.pt.likely;})
+      .filter(function(d) {return isHighlighted(d.source.pt);})
       .attr('stroke-width', '2px');
 
   place_link
-      .filter(function(d) {return !d.source.pt.likely;})
+      .filter(function(d) {return !isHighlighted(d.source.pt);})
       .attr('stroke-width', '1.5px')
       .attr('opacity', '0.5')
       .attr('stroke-dasharray', '2,2');
@@ -468,7 +479,7 @@ function showTrees(assignment) {
         return 'translate(' + d.y + ',' + d.x + ')';
       });
 
-  place.filter(function(d) {return !d.pt.likely;})
+  place.filter(function(d) {return !isHighlighted(d.pt);})
       .attr('opacity', 0.7);
 
   place.append('circle')

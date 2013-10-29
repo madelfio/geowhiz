@@ -44,13 +44,57 @@
   .place circle {fill: #aaa; stroke: steelblue; stroke-width: 1.5px;}
   .place-link {fill: none;}
 
-  #place-list-input-container {position:static; float: left; width:310px;}
-  #place-list-input-container div {height: 260px; overflow:auto;}
-  #results-container {position:static; float:right; right: 3px; top: 3px; width: 850px;}
-  #results-container div {height: 260px; overflow: auto;}
-  #tree-container {position:static; float:right; width: 740px;}
-  #map-container {position:static; float:left;}
-  #map-options {font-size:10pt; color: #555;}
+  .options {font-size:10pt; color: #555;}
+
+  #content {
+    position:relative;
+    min-height:inherit;
+    height:100%;
+  }
+  #outer {
+    position:absolute;
+    width:100%;
+    top:65px;
+    bottom:0;
+  }
+
+  #place-list-input-container,
+  #results-container,
+  #tree-container,
+  #map-container{
+    position:absolute;
+    overflow:hidden;
+    float:inherit;
+    margin-top:3px;
+    margin-bottom:3px;
+  }
+  .buffer {
+    position:absolute;
+    left:5px;
+    right:5px;
+    top:25px;
+    bottom:10px;
+    overflow:auto;
+  }
+
+  #place-list-input-container {left:0; top:0; width:21%; height:30%;}
+  #place-list-input-container div {overflow:auto;}
+  #results-container {right: 0; top:0; width: 74%; height:30%;}
+  #tree-container {right: 3px; top:32%; width: 800px; height:65%;}
+  #map-container {left:0; top:32%; right:850px; height:65%;}
+  #map-canvas {position:absolute; left:0; top:0; right:0; height:100%; width:initial;}
+  .options {position:absolute; bottom:5px;}
+
+  @media (min-width: 1500px) {
+    #content {
+      width:1400px;
+    }
+  }
+  @media (min-width:1700px) {
+    #content {
+      width:1550px;
+    }
+  }
 </style>
 
 <div id="content">
@@ -58,10 +102,10 @@
 <div id="outer">
   <fieldset id="place-list-input-container">
     <legend>Enter List of Places</legend>
-    <div>
+    <div class="buffer">
       <form>
       <div>
-      <textarea id="vals" style="width: 280px; height: 200px">
+      <textarea id="vals" style="width: 90%; height: 26ex;">
 Dublin
 Athens
 Rome</textarea>
@@ -72,9 +116,9 @@ Rome</textarea>
   </fieldset>
   <fieldset id="results-container" style="display:none; opacity: 0">
     <legend>Category Results</legend>
-    <div>
+    <div class="buffer">
       <table id="results" style="display: none; max-height: 400px; overflow: auto;">
-      <tr id="header"><th>Category</th><th>Coverage</th><th>Ambiguity</th><th>Likelihood</th></tr>
+        <tr id="header"><th>Category</th><th>Coverage</th><th>Ambiguity</th><th>Likelihood</th></tr>
       </table>
     </div>
   </fieldset>
@@ -82,14 +126,23 @@ Rome</textarea>
   </div>
   <fieldset id="tree-container" style="display:none; opacity: 0">
     <legend>Category Tree</legend>
-    <svg id="tree-svg"></svg>
+    <div class="buffer" style="bottom:40px;">
+      <svg id="tree-svg"></svg>
+    </div>
+      <div id="svg-options" class="options">
+        <label><input type="checkbox" id="prox-resolution">
+          <span>Use proximity resolution</span>
+        </label>
+      </div>
   </fieldset>
   <fieldset id="map-container" style="visibility:hidden; opacity: 0">
     <legend>Map of Places</legend>
-    <div id="map-canvas">
+    <div class="buffer" style="bottom:40px;">
+      <div id="map-canvas">
+      </div>
     </div>
-    <div id="map-options">
-      <label><input type="checkbox" id="zoom-to-points">
+    <div id="map-options" class="options">
+      <label><input type="checkbox" checked="checked" id="zoom-to-points">
         <span>Zoom to points</span>
       </label>&nbsp;&nbsp;
       <label><input type="checkbox" id="show-all-points">
