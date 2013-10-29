@@ -301,7 +301,7 @@ var svg = d3.selectAll('#tree-svg')
     .attr('width', width + place_list_width)
     .attr('height', height);
 var tax = svg.append('g')
-    .attr('transform', 'translate(-25,' + node_height + ')');
+    .attr('transform', 'translate(-25,10)');
 
 function showTrees(assignment) {
   // process pts into tree fmt
@@ -427,7 +427,7 @@ function showTrees(assignment) {
   //svg.attr('height', Math.max(height, dim2_max + dim2_offset + node_height * 2));
   reveal('#tree-container');
   reveal('#map-container');
-  svg.attr('height', max_height + node_height * 2);
+  svg.transition().attr('height', max_height + node_height);
 
   tax.selectAll('path.link').remove();
   tax.selectAll('g.node').remove();
@@ -498,6 +498,32 @@ function showTrees(assignment) {
       .attr('x', 8)
       .attr('y', 3)
       .text(function(d) {return d.pt.name;});
+
+  place.on('mouseover', function(p) {
+    var place_sel = d3.select(this);
+    place_link
+      .filter(function(d) {return d.source.pt.geonameid === p.pt.geonameid;})
+      .transition()
+        .attr('stroke-width', '4px');
+    place_sel
+      .transition()
+        .attr('opacity', 1);
+    place_sel.selectAll('circle')
+      .transition()
+        .attr('fill', 'steelblue')
+  }).on('mouseout', function(p) {
+    var place_sel = d3.select(this);
+    place_link
+      .filter(function(d) {return d.source.pt.geonameid === p.pt.geonameid;})
+      .transition()
+      .attr('stroke-width', function(d) {return isHighlighted(d.source.pt) ? '2px' : '1.5px';});
+    place_sel
+      .transition()
+        .attr('opacity', function(d) {return isHighlighted(p.pt) ? 1 : 0.5;});
+    place_sel.selectAll('circle')
+      .transition()
+        .attr('fill', '#aaa');
+  });
 }
 
 var map, proj;
