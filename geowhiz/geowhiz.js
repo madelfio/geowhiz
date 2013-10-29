@@ -526,6 +526,119 @@ function showTrees(assignment) {
   });
 }
 
+var sample_lists = [
+  ['Dublin', 'Athens', 'Rome'],
+  ['Springfield', 'Alexandria', 'Arlington', 'Vienna'],
+  ['Washoe', 'Clark', 'Elko'],
+  ['Corpus Christi', 'Jacksonville', 'New York City', 'Phoenix',
+    'Sonoma County', 'Williamsburg'],
+  ['Allen Park', 'Southgate', 'Birmingham', 'Flint', 'Detroit', 'Taylor',
+    'McMillan', 'Bellville', 'Grass Lake'],
+  ['San Juan', 'Newark', 'Hackensack', 'Paterson', 'Kearny', 'Bronx',
+    'Westchester', 'Queens', 'Staten Island', 'Hicksville'],
+  ['Encino', 'Pacific Palisades', 'Rancho Park'],
+  ['B.C.', 'Alberta', 'Saskatchewan', 'Manitoba', 'Ontario', 'Quebec',
+    'New Brunswick', 'Nova Scotia', 'Prince Edward Island', 'Newfoundland'],
+  ['Reinbek', 'Heidelberg', 'Frankfurt', 'Stuttgart', 'München', 'Hamburg',
+    'Paderborn', 'Augsburg'],
+  ['Doha', 'Osaka', 'Dakar', 'Hengelo', 'Belem', 'Filothei', 'Beograd', 'Gotzis'],
+  ['Fort Rucker', 'Redsone Arsenal', 'Fort Richardson', 'Fort Huachuca',
+    'Pine Bluff Army Depot'],
+  ['Leicester', 'Macclesfield', 'Aberdeen', 'Broxburn', 'Tayside', 'Yeovil',
+    'Inverurie', 'Crawford', 'Bournemouth', 'Newport', 'Ipswich'],
+  ['Aliso Viejo', 'Anaheim', 'Anaheim Hills', 'Brea', 'Buena Park',
+    'Corona del Mar', 'Costa Mesa', 'Coto De Caza', 'Cypress', 'Dana Point',
+    'Laguna Woods'],
+  ['Brazil', 'China', 'Kazakhstan', 'Madagascar', 'Mozambique', 'Portugal',
+    'Russia', 'United States', 'Zambia'],
+  ['Sat', 'Sun', 'Thu', 'Fri', 'Mon', 'Wed'],
+  ['Norway', 'Sweden', 'Australia', 'Canada', 'Netherlands', 'Belgium',
+    'Iceland', 'United States', 'Japan', 'Ireland'],
+  ['Achille', 'Afton', 'Agra', 'Albion', 'Alex', 'Aline', 'Allen', 'Tulsa',
+    'Amber', 'Sand Springs'],
+  ['Bucuresti', 'Ploiesti', 'Campina', 'Mizil', 'Valenii de Munte', 'Pitesti',
+    'Campulung Muscel', 'Curtea de Arges', 'Calarasi', 'Oltenita',
+    'Alexandria'],
+  ['Paris', 'London', 'Rome'],
+  ['Babylon', 'Center Moriches', 'Long Beach', 'Groton', 'Onset', 'Baltimore',
+    'San Francisco', 'Topsail Beach', 'St Petersburg', 'North Haven'],
+  ['Afghanistan', 'Albania', 'Algerie', 'Amerikansk Samoa',
+    'Amerikanske Jomfruyene, de', 'Andorra', 'Angola', 'Anguilla',
+    'Antigua og Barbuda', 'Argentina'],
+  ['Lazio', 'Trentino Alto Adige', 'Lazio', 'Lombardy', 'Tuscany',
+    'Umbria', 'Lombardy', 'Campania', 'Trentino Alto Adige', 'Emilia Romagna'],
+  ['Harris', 'El Paso', 'Bexar', 'Dallas', 'Collin'],
+  ['Johor Bahru', 'Puchong', 'Petaling Jaya', 'Kuala Lumpur', 'Kota Baharu',
+    'Bukit Jalil', 'Melaka', 'Shah Alam', 'Kuala Lumpur', 'Jalan Sultan Ismail'],
+  ['Sydney', 'Abaco', 'Hong Kong', 'Malau', 'Bordeaux', 'Tuticorin',
+    'New Mangalore', 'Bushehr', 'Bahonar', 'Sirri Island']
+];
+
+function Modal(selector) {
+  var modal = {},
+      sel = d3.select(selector),
+      overlay = null,
+      container = null,
+      div = null;
+  modal.open = function() {
+    overlay = d3.select('body')
+      .append('div')
+        .style('background-color', 'black')
+        .style('opacity', 0.5)
+        .style('height', '100%')
+        .style('width', '100%')
+        .style('position', 'absolute')
+        .style('top', '0')
+        .style('left', '0')
+        .style('padding', '10px')
+        .style('z-index', '1001');
+    container = d3.select('body')
+      .append('div')
+        .attr('class', 'modal-container')
+        .style('position', 'absolute')
+        .style('top', '50%')
+        .style('left', '50%')
+        .style('z-index', '1002')
+      .append('div')
+        .attr('class', 'modal-wrap');
+
+    sel.style('display', 'block');
+    container.node().appendChild(sel.node());
+  }
+  modal.close = function() {
+    overlay.style('display', 'none');
+    container.style('display', 'none');
+  }
+  return modal;
+}
+
+var samples = d3.select('#sample-lists').selectAll('div.sample')
+  .data(sample_lists).enter()
+  .append('div')
+    .attr('class', 'sample')
+    .on('click', function(d) {
+      d3.select('#vals')
+        .text(d.join('\n'));
+      modal.close();
+    });
+
+samples.selectAll('span')
+  .data(function(d) {return d.filter(function(_, i) {return (i <= 5)});}).enter()
+  .append('span')
+    .attr('class', 'sample-place')
+    .text(function(d, i) {return i < 5 ? d : '...';});
+
+// set up modal dialog
+var modal = Modal('#sample-popup');
+d3.select('#modal-open').on('click', function() {
+  modal.open();
+  return false;
+});
+d3.select('body').on('keydown', function() {
+  if (d3.event.keyCode == 27) {modal.close();}
+});
+
+
 var map, proj;
 
 function initializeMap() {

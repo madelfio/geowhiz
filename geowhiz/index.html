@@ -1,6 +1,9 @@
 <!doctype html>
 
 <style>
+  *, *:before, *:after {
+    box-sizing: border-box;
+  }
   html {height: 100%; font-family: sans;}
   body {background-color: #eee; height: 100%; min-height:100%; margin:0;}
   #content {
@@ -31,7 +34,24 @@
     color: #468;
     font-weight: bold;
   }
-  textarea {border: 1px solid #ccc; border-radius: 2px;}
+  textarea {
+    position:absolute;
+    top:0;
+    bottom:25px;
+    resize: none;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+  }
+  #place-list-input-container input {
+    position:absolute;
+    bottom:0;
+    right:0;
+  }
+  #modal-open {
+    position:absolute;
+    bottom:0;
+    left:0;
+  }
 
   #vals {font-family:"Andale Mono",monospace;}
   #results td {padding: 1px 15px; font-size: 11pt;}
@@ -81,12 +101,40 @@
 
   #place-list-input-container {left:0; top:0; width:21%; height:30%;}
   #place-list-input-container div {overflow:auto;}
-  #results-container {right: 0; top:0; width: 74%; height:30%;}
-  #tree-container {right: 3px; top:32%; width: 800px; height:65%;}
-  #map-container {left:0; top:32%; right:850px; height:65%;}
+  #results-container {right: 0; top:0; width: 78%; height:30%;}
+  #tree-container {right: 3px; top:31%; width: 800px; height:68%;}
+  #map-container {left:0; top:31%; right:815px; height:68%;}
   #map-canvas {position:absolute; left:0; top:0; right:0; height:100%; width:initial;}
   .options {position:absolute; bottom:5px;}
 
+  .modal-wrap {
+    background-color: white;
+    border: 2px solid #333;
+    border-radius: 5px;
+    padding:8px;
+    margin-top: -300px;
+    margin-left: -500px;
+  }
+  #sample-lists {
+    max-height:600px;
+    max-width:1000px;
+    overflow:auto;
+  }
+  .sample {
+    display: inline-block;
+    vertical-align: top;
+    margin: 5px;
+    max-height: 200px;
+    overflow: auto;
+    width: 120px;
+    border: 1px solid #ccc;
+    padding: 2px;
+    font-size: .9em;
+    cursor: pointer;
+  }
+  .sample-place {
+    display: block;
+  }
   @media (min-width: 1500px) {
     #content {
       width:1400px;
@@ -107,13 +155,14 @@
     <div class="buffer">
       <form>
       <div>
-      <textarea id="vals" style="width: 90%; height: 26ex;">
+      <textarea id="vals" style="width: 90%;">
 Dublin
 Athens
 Rome</textarea>
       <input type="submit" id="submit" value="Submit" />
       </div>
       </form>
+      <div id="modal-open" class="options"><a href="#">Use sample list</a></div>
     </div>
   </fieldset>
   <fieldset id="results-container" style="display:none; opacity: 0">
@@ -153,6 +202,14 @@ Rome</textarea>
     </div>
   </fieldset>
 </div>
+</div>
+
+<div id="sample-popup" style="display:none;">
+  <h3>Sample Lists</h3>
+  Click to geotag a list
+  <div id="sample-lists">
+  </div>
+
 </div>
 
 <script src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
