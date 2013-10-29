@@ -107,7 +107,11 @@ class GeoWhiz(object):
         self.gaz = gaz
         self.taxonomy = self._initialize_taxonomy()
         self.classifier = self._initialize_classifier()
-        self.cat_text_func = cattext.CatText(self.gaz).cat_text
+
+        # expose category->text helper funcs for use in web module
+        cat_text_obj = cattext.CatText(self.gaz)
+        self.cat_text_func = cat_text_obj.cat_text
+        self.all_cat_text_func = cat_text_obj.all_cat_text
 
     def _initialize_taxonomy(self):
         t = taxonomy.Taxonomy()
@@ -138,6 +142,9 @@ class GeoWhiz(object):
 
     def cat_text(self, category, number):
         return self.cat_text_func(category, number)
+
+    def all_cat_text(self, category):
+        return self.all_cat_text_func(category)
 
 
 class FullGeotagResults(object):

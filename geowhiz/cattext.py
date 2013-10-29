@@ -61,13 +61,13 @@ class CatText(object):
         )
         return ('with population ≥ %s' % (val,)).decode('utf8')
 
-    def geo_text(self, geo_s):
+    def geo_text(self, geo_s, max_depth=4):
         if geo_s == ROOT:
             return 'around the world'
 
         geo_l = geo_s.split('|')
 
-        k = '|'.join(geo_l[:4])
+        k = '|'.join(geo_l[:max_depth])
 
         if k in GEONAME_CONTAINERS:
             return fmt(k)
@@ -121,6 +121,25 @@ class CatText(object):
         geo_txt = geo_txt or self.geo_text(cat_s[1])
 
         return ' '.join(t for t in (type_txt, prom_txt, geo_txt) if t)
+
+    def all_cat_text(self, cat_s):
+        type_txt = geo_txt = prom_txt = ''
+        cat_t, cat_g, cat_p = cat_s
+
+        l = cat_t.split('|')
+        type_txt = '|'.join([self.lookup_type_code('|'.join(l[:i + 1]))
+                             for i in range(len(l))])
+
+        l = cat_g.split('|')
+        geo_txt = '|'.join([self.geo_text('|'.join(l[:i + 1]))
+                            for i in range(len(l))])
+
+        l = cat_p.split('|')
+        prom_txt = '|'.join([self.prominence_text('|'.join(l[:i + 1]))
+                             for i in range(len(l))])
+
+        return [type_txt, prom_txt, geo_txt]
+
 
 
 def load_geoname_types(gaz):

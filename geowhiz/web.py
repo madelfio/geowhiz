@@ -28,6 +28,9 @@ def create_app(geowhiz):
             for col in r.categories:
                 col['txt'] = geowhiz.cat_text(col['category'],
                                               col['stats']['total'])
+            for col in r.cell_interpretations:
+                for interp in col:
+                    interp['txt'] = geowhiz.all_cat_text(interp['cat'])
 
         return geotag_results.toJSON()
 
