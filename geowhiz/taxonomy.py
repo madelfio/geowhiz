@@ -1,6 +1,3 @@
-ROOT = '_'
-
-
 class Taxonomy(object):
     """Maintains multiple dimensions"""
     def __init__(self):
@@ -33,7 +30,7 @@ depth = lambda x: x.count('|')
 class Dimension(object):
     """A dimension for classifying toponyms"""
     def __init__(self, classifier=None, class_extractor=None):
-        self.classifier = classifier or (lambda x: ROOT)
+        self.classifier = classifier or (lambda x: '_')
         self.class_extractor = class_extractor or depth
 
     def categorize(self, instance):

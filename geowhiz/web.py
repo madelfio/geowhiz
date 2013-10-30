@@ -15,22 +15,22 @@ def create_app(geowhiz):
 
     @app.route('/geotag')
     def geotag():
+
         vals = request.args.get('vals', '')
         rows = []
+
         for row in vals.split('\n'):
             if len(row.strip()) > 0:
                 rows.append([row.strip()])
                 #rows.append([c.strip() for c in row.split(',')])
-        grid = list(itertools.izip_longest(*rows))
-        geotag_results = geowhiz.geotag_full(grid, 'both')
 
-        for r in geotag_results.assignments:
-            for col in r.categories:
-                col['txt'] = geowhiz.cat_text(col['category'],
-                                              col['stats']['total'])
-            for col in r.cell_interpretations:
-                for interp in col:
-                    interp['txt'] = geowhiz.all_cat_text(interp['cat'])
+        grid = list(itertools.izip_longest(*rows))
+
+        geotag_results = geowhiz.geotag_full(
+            grid,
+            resolution_method='both',
+            include_text=True
+        )
 
         return geotag_results.toJSON()
 

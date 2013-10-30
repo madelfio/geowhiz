@@ -2,7 +2,9 @@
 import locale
 locale.setlocale(locale.LC_ALL, 'en_US.utf8')
 
-ROOT = '_'
+TYPE_ROOT = 'dim0'
+GEO_ROOT = 'dim1'
+PROM_ROOT = 'dim2'
 GEONAME_CONTAINERS = {'_|NA|US': 'USA'}
 STATIC = {'_|NA|US': 'the United States'}
 fmt = lambda x: 'in %s' % (
@@ -32,9 +34,9 @@ class CatText(object):
         """
         default = {'type': 'place', 'plural': 'places'}
 
-        if type_code == ROOT:
+        if type_code == TYPE_ROOT:
             t = default
-        elif type_code == ROOT + '|A|ADM':
+        elif type_code == TYPE_ROOT + '|A|ADM':
             t = {'type': 'administrative region',
                  'plural': 'administrative regions'}
         else:
@@ -50,7 +52,7 @@ class CatText(object):
             return t['type']
 
     def prominence_text(self, prominence_s):
-        if prominence_s == ROOT:
+        if prominence_s == PROM_ROOT:
             return ''
         elif prominence_s[-1] == '1':
             return 'with population > 0'
@@ -62,7 +64,7 @@ class CatText(object):
         return u'with population ≥ %s' % (val,)
 
     def geo_text(self, geo_s, max_depth=4):
-        if geo_s == ROOT:
+        if geo_s == GEO_ROOT:
             return 'around the world'
 
         geo_l = geo_s.split('|')
@@ -122,24 +124,20 @@ class CatText(object):
 
         return ' '.join(t for t in (type_txt, prom_txt, geo_txt) if t)
 
-    def all_cat_text(self, cat_s):
-        type_txt = geo_txt = prom_txt = ''
-        cat_t, cat_g, cat_p = cat_s
-
-        l = cat_t.split('|')
-        type_txt = '|'.join([self.lookup_type_code('|'.join(l[:i + 1]))
-                             for i in range(len(l))])
-
-        l = cat_g.split('|')
-        geo_txt = '|'.join([self.geo_text('|'.join(l[:i + 1]))
-                            for i in range(len(l))])
-
-        l = cat_p.split('|')
-        prom_txt = '|'.join([self.prominence_text('|'.join(l[:i + 1]))
-                             for i in range(len(l))])
-
-        return [type_txt, prom_txt, geo_txt]
-
+    def cat_node_text(self, cat_s, dim):
+        if dim == 0:
+            txt = self.lookup_type_code(cat_s, plural=False)
+        elif dim == 1:
+            txt = self.geo_text(cat_s)
+            if 'around the world' in txt:
+                txt = 'Earth'
+            if txt.startswith('in '):
+                txt = txt[len('in '):]
+        elif dim == 2:
+            txt = self.prominence_text(cat_s)
+            if txt.startswith('with '):
+                txt = txt[len('with '):]
+        return txt
 
 
 def load_geoname_types(gaz):
@@ -239,7 +237,7 @@ def load_geoname_types(gaz):
 
     geoname_types = {}
     for t in types:
-        code_str = '|'.join(n for n in [ROOT, t['t1'], t['t2'], t['t3']] if n)
+        code_str = '|'.join(n for n in [TYPE_ROOT, t['t1'], t['t2'], t['t3']] if n)
         attrs = {'type': t['type'], 'plural': t['plural'], 'desc': t['desc']}
         geoname_types[code_str] = attrs
 

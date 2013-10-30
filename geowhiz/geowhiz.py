@@ -10,16 +10,19 @@ import cattext
 # functions to extract dimension values from raw gazetteer result #
 ###################################################################
 
+TYPE_ROOT = 'dim0'
+GEO_ROOT = 'dim1'
+PROM_ROOT = 'dim2'
 
 def type_classifier(d):
-    return [taxonomy.ROOT,
+    return [TYPE_ROOT,
             d['fclass'],
             (d.get('fcode') or '')[:3] or None,
             d['fcode'] if d['fcode'] and len(d['fcode']) > 3 else None]
 
 
 def geo_classifier(d):
-    l = [taxonomy.ROOT, d['continent'], d['country'],
+    l = [GEO_ROOT, d['continent'], d['country'],
          d['admin1'] if d['admin1'] != '00' or d['country'] else None,
          d['admin2'], d['admin3'], d['admin4']]
     # remove trailing Nones
@@ -40,7 +43,7 @@ def geo_classifier(d):
         return l[:-6]
 
 
-prominence_tree = ([taxonomy.ROOT] +
+prominence_tree = ([PROM_ROOT] +
                    ['Prominent%d' % (i + 1,) for i in range(9)])
 
 
@@ -62,7 +65,7 @@ amb_log = lambda x: math.floor(math.log(x) / math.log(1.1))
 
 
 feature_funcs = [
-    lambda x, y: '_',  # dummy feature to test coverage probability
+    lambda x, y: 'COV',  # dummy feature to test coverage probability
     lambda x, y: x[0],
     #lambda x, y: taxonomy.get_depths(x),
     lambda x, y: depth(x[2]),
@@ -74,7 +77,7 @@ feature_funcs = [
     lambda x, y: 1.00001 <= y['ambiguity'] < 1.3,
     lambda x, y: 1.3 <= y['ambiguity'] < 1.75,
     lambda x, y: 1.75 <= y['ambiguity'],
-    lambda x, y: (x[0].startswith(taxonomy.ROOT+'|P'), depth(x[2])),
+    lambda x, y: (x[0].startswith(TYPE_ROOT+'|P'), depth(x[2])),
 ]
 
 
@@ -109,9 +112,7 @@ class GeoWhiz(object):
         self.classifier = self._initialize_classifier()
 
         # expose category->text helper funcs for use in web module
-        cat_text_obj = cattext.CatText(self.gaz)
-        self.cat_text_func = cat_text_obj.cat_text
-        self.all_cat_text_func = cat_text_obj.all_cat_text
+        self.cat_text = cattext.CatText(self.gaz)
 
     def _initialize_taxonomy(self):
         t = taxonomy.Taxonomy()
@@ -130,11 +131,44 @@ class GeoWhiz(object):
         results = self.classifier.geotag(grid)
         return Assignment(**results)
 
-    def geotag_full(self, grid, resolution_method=None):
+    def geotag_full(self,
+                    grid,
+                    resolution_method=None,
+                    include_text=False):
         results = self.classifier.geotag_full(grid,
                                               resolution_method=resolution_method)
         assignments = [Assignment(**r) for r in results]
-        return FullGeotagResults(assignments)
+
+        cat_node_text = None
+        if include_text:
+            self.include_text(assignments)
+            cat_node_text = self.cat_node_text(assignments)
+
+        return FullGeotagResults(assignments, cat_node_text)
+
+    def include_text(self, assignments):
+        # attach text description for each category (used for web interfact)
+        for r in assignments:
+            for col in r.categories:
+                col['txt'] = self.cat_text.cat_text(col['category'],
+                                                    col['stats']['total'])
+
+    def cat_node_text(self, assignments):
+        # accumulate category nodes, return text description for each (to
+        # display on nodes in tree visualization)
+        cat_node_text = {}
+        for r in assignments:
+            for col in r.categories:
+                cat = col['category']
+                for i in range(len(cat)):
+                    node_l = cat[i].split('|')
+                    # include parent nodes
+                    for j in range(len(node_l)):
+                        node = '|'.join(node_l[:j+1])
+                        if node not in cat_node_text:
+                            cat_node_text[node] = self.cat_text.cat_node_text(node, i)
+        return cat_node_text
+
 
     def web_app(self):
         import web
@@ -148,8 +182,9 @@ class GeoWhiz(object):
 
 
 class FullGeotagResults(object):
-    def __init__(self, assignments):
+    def __init__(self, assignments, cat_node_text=None):
         self.assignments = assignments
+        self.cat_node_text = cat_node_text
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True)
