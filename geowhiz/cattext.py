@@ -59,7 +59,7 @@ class CatText(object):
             10 ** (int(prominence_s[-1]) - 1),
             grouping=True
         )
-        return ('with population ≥ %s' % (val,)).decode('utf8')
+        return u'with population ≥ %s' % (val,)
 
     def geo_text(self, geo_s, max_depth=4):
         if geo_s == ROOT:
