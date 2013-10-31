@@ -35,17 +35,29 @@ SELECT fclass, fcode, name, description from featurecodes;
 """.strip()
 
 GET_CONTAINER_COUNTRY_NAME = """
-SELECT name FROM country WHERE iso2 in (?)
+SELECT name FROM country WHERE iso2 = ?
 """.strip()
 
 GET_CONTAINER_ADMIN1_NAME = """
-SELECT name FROM admin1 WHERE country in (?) and admin1 in (?)
+SELECT name FROM admin1 WHERE country = ? and admin1 = ?
 """.strip()
 
 GET_CONTAINER_ADMIN2_NAME = """
 SELECT name FROM admin2
-WHERE country in (?) and admin1 in (?) and admin2 in (?)
+WHERE country = ? and admin1 = ? and admin2 = ?
 """.strip()
+
+GET_CONTAINER_ADMIN3_NAME = """
+SELECT name from geoname
+WHERE country = ? and admin1 = ? and admin2 = ? and admin3 = ?
+and fcode = 'ADM3'
+"""
+
+GET_CONTAINER_ADMIN4_NAME = """
+SELECT name from geoname
+WHERE country = ? and admin1 = ? and admin2 = ? and admin3 = ? and admin4 = ?
+and fcode = 'ADM4'
+"""
 
 # a helper function to avoid "too many SQL variables" error
 def chunks(l, n):
@@ -106,4 +118,14 @@ class sqliteGaz(geowhiz.Gazetteer):
     def get_container_admin2(self, params):
         cur = self._get_conn().cursor()
         cur.execute(GET_CONTAINER_ADMIN2_NAME, params)
+        return cur.fetchone()
+
+    def get_container_admin3(self, params):
+        cur = self._get_conn().cursor()
+        cur.execute(GET_CONTAINER_ADMIN3_NAME, params)
+        return cur.fetchone()
+
+    def get_container_admin4(self, params):
+        cur = self._get_conn().cursor()
+        cur.execute(GET_CONTAINER_ADMIN4_NAME, params)
         return cur.fetchone()

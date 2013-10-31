@@ -111,7 +111,7 @@ d3.select('#submit').on('click', function() {
   d3.json('./geotag?vals=' + encodeURIComponent(txt), function(error, json) {
     reveal('#results-container');
     d3.select('#results').style('display', 'table').selectAll('tr.cat').remove();
-    var data_obj = json;
+    data_obj = json;
     var data = json.assignments.filter(function(d, i) {
       return (+d.likelihood >= 0.0000005) || (i <= 15);
     });
@@ -297,7 +297,8 @@ var superscript = "⁰¹²³⁴⁵⁶⁷⁸⁹",
     formatPower = function(d) { return (d + "").split("").map(function(c) { return superscript[c]; }).join(""); };
 
 
-var svg = d3.selectAll('#tree-svg')
+var svg = d3.select('.tree-buffer')
+  .append('svg')
     .attr('width', width + place_list_width)
     .attr('height', height);
 var tax = svg.append('g')
@@ -478,6 +479,9 @@ function showTrees(assignment) {
       .attr("y", 12)
       .attr("text-anchor", "end")
       .text(function(d) { return d.name; });
+
+  node.append('title')
+      .text(function(d) {return data_obj.cat_node_text[d.code];});
 
   var places = tax.selectAll('g.place')
       .data(place_nodes);

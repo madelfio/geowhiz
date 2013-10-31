@@ -47,7 +47,9 @@ table(
     'elevation integer, gtopo30 integer, timezone text, mod_date date)',
     indexes=[('geoname_pkey', 'geonameid'),
       ('geoname_name_idx', 'name'),
-      ('geoname_asciiname_idx', 'asciiname')]
+      ('geoname_asciiname_idx', 'asciiname'),
+      ('geoname_admkey', 'country, admin1, admin2, admin3, admin4')
+    ]
 )
 
 table(

@@ -101,6 +101,32 @@ class CatText(object):
 
         return fmt(k)
 
+    def simple_geo_text(self, geo_s):
+        geo_l = geo_s.split('|')
+
+        res = ''
+
+        if len(geo_l) == 1:
+            return 'Earth'
+        elif len(geo_l) == 2:
+            return CONTINENTS[geo_l[-1]]
+        elif len(geo_l) == 3:
+            res = self.gaz.get_container_country(geo_l[2:3])
+        elif len(geo_l) == 4:
+            res = self.gaz.get_container_admin1(geo_l[2:4])
+        elif len(geo_l) == 5:
+            res = self.gaz.get_container_admin2(geo_l[2:5])
+        elif len(geo_l) == 6:
+            res = self.gaz.get_container_admin3(geo_l[2:6])
+        elif len(geo_l) == 7:
+            res = self.gaz.get_container_admin4(geo_l[2:7])
+
+        if res and res[0]:
+            return res[0]
+        else:
+            return ''
+
+
     def cat_text(self, cat_s, cnt=2):
         type_txt = prom_txt = geo_txt = None
 
@@ -128,11 +154,7 @@ class CatText(object):
         if dim == 0:
             txt = self.lookup_type_code(cat_s, plural=False)
         elif dim == 1:
-            txt = self.geo_text(cat_s)
-            if 'around the world' in txt:
-                txt = 'Earth'
-            if txt.startswith('in '):
-                txt = txt[len('in '):]
+            txt = self.simple_geo_text(cat_s)
         elif dim == 2:
             txt = self.prominence_text(cat_s)
             if txt.startswith('with '):

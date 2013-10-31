@@ -158,15 +158,16 @@ class GeoWhiz(object):
         # display on nodes in tree visualization)
         cat_node_text = {}
         for r in assignments:
-            for col in r.categories:
-                cat = col['category']
-                for i in range(len(cat)):
-                    node_l = cat[i].split('|')
-                    # include parent nodes
-                    for j in range(len(node_l)):
-                        node = '|'.join(node_l[:j+1])
-                        if node not in cat_node_text:
-                            cat_node_text[node] = self.cat_text.cat_node_text(node, i)
+            for col in r.cell_interpretations:
+                for interp in col:
+                    cat = interp['cat']
+                    for i in range(len(cat)):
+                        node_l = cat[i].split('|')
+                        # include parent nodes
+                        for j in range(len(node_l)):
+                            node = '|'.join(node_l[:j+1])
+                            if node not in cat_node_text:
+                                cat_node_text[node] = self.cat_text.cat_node_text(node, i)
         return cat_node_text
 
 
