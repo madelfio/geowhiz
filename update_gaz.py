@@ -48,7 +48,7 @@ table(
     indexes=[('geoname_pkey', 'geonameid'),
       ('geoname_name_idx', 'name'),
       ('geoname_asciiname_idx', 'asciiname'),
-      ('geoname_admkey', 'country, admin1, admin2, admin3, admin4')
+      ('geoname_adm_lookup', 'fcode, country, admin1, admin2, admin3, admin4')
     ]
 )
 
@@ -56,9 +56,9 @@ table(
     'alternateNames.txt',
     'altname',
     '(altnameid integer, geonameid integer, isolanguage text, altname text, ' +
-    'ispreferred text, isshort text, iscolloquial tex, ishistoric text)',
+    'ispreferred text, isshort text, iscolloquial text, ishistoric text)',
     lambda x: ([(v).decode('utf8') for v in l.strip('\n').split('\t')] for l in x),
-    [('altname_pkey', 'altnameid'), ('altname_name_idx', 'altname')]
+    indexes=[('altname_pkey', 'altnameid'), ('altname_name_idx', 'altname')]
 )
 
 
@@ -66,7 +66,8 @@ table(
     'admin1CodesASCII.txt',
     'admin1',
     '(country text, admin1 text, name text, asciiname text, geonameid integer)',
-    lambda x: ([(v).decode('utf8') for v in l.replace('.', '\t', 1).strip('\n').split('\t')] for l in x)
+    lambda x: ([(v).decode('utf8') for v in l.replace('.', '\t', 1).strip('\n').split('\t')] for l in x),
+    indexes=[('admin1_lookup', 'country, admin1')]
 )
 
 table(
@@ -75,7 +76,8 @@ table(
     '(country text, admin1 text, admin2 text, name text, asciiname text,' +
     'geonameid integer)',
     lambda x: ([(v).decode('utf8')
-                for v in l.replace('.', '\t', 2).strip('\n').split('\t')] for l in x)
+                for v in l.replace('.', '\t', 2).strip('\n').split('\t')] for l in x),
+    indexes=[('admin2_lookup', 'country, admin1, admin2')]
 )
 
 def fill_rowdata(x):
@@ -110,8 +112,24 @@ table(
     'areainsqkm real, population integer, continent text, tld text, currencycode ' +
     'text, currencyname text, phone text, postformat text, postregex text, ' +
     'languages text, geonameid integer, neighbors text, fipsequiv text)',
-    process_country_rowdata
+    process_country_rowdata,
+    indexes=[('country_lookup', 'iso2')]
 )
+
+# TODO: no instr in sqlite 3.6 (on sametsrv01), so need workaround
+add_counties = """
+insert into altname
+(geonameid, altname, isshort)
+select
+  geonameid,
+  1,
+  substr(name, 0, instr(name, ' County'))
+from geoname
+where
+  instr(name, ' County') and
+  fclass = 'A'
+;
+"""
 
 conn.close()
 
