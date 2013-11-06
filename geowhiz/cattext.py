@@ -10,6 +10,7 @@ STATIC = {'_|NA|US': 'the United States'}
 fmt = lambda x: 'in %s' % (
     STATIC.get(x, GEONAME_CONTAINERS.get(x, 'UNKNOWN')),
 )
+SIMPLE_CONTAINERS = {}
 
 CONTINENTS = {
     'NA': 'North America',
@@ -102,6 +103,9 @@ class CatText(object):
         return fmt(k)
 
     def simple_geo_text(self, geo_s):
+        if geo_s in SIMPLE_CONTAINERS:
+            return SIMPLE_CONTAINERS[geo_s]
+
         geo_l = geo_s.split('|')
 
         res = ''
@@ -122,6 +126,7 @@ class CatText(object):
             res = self.gaz.get_container_admin4(geo_l[2:7])
 
         if res and res[0]:
+            SIMPLE_CONTAINERS[geo_s] = res[0]
             return res[0]
         else:
             return ''
