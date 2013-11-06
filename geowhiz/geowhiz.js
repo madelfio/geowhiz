@@ -622,7 +622,7 @@ var samples = d3.select('#sample-lists').selectAll('div.sample')
     .attr('class', 'sample')
     .on('click', function(d) {
       d3.select('#vals')
-        .text(d.join('\n'));
+        .property('value', d.join('\n'));
       modal.close();
     });
 
@@ -650,7 +650,9 @@ function initializeMap() {
     center: new google.maps.LatLng(10, 0),
     zoom: 1,
     mapTypeId: google.maps.MapTypeId.ROADMAP,
-    streetViewControl: false
+    streetViewControl: false,
+    panControl: false,
+    zoomControl: false
   };
   map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
 
