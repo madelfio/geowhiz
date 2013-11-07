@@ -33,7 +33,7 @@ def geo_classifier(d):
         return l[:-1]
     elif d['admin2']:
         return l[:-2]
-    elif d['admin1']:
+    elif d['admin1'] and d['country']:
         return l[:-3]
     elif d['country']:
         return l[:-4]
