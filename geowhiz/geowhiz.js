@@ -285,8 +285,8 @@ var diagonal = d3.svg.diagonal()
 function connector(d, i) {
   var p0 = d.source,
       p3 = d.target,
-      m1 = (2*p0.y/3 + p3.y/3),
-      m2 = (p0.y/3 + 2*p3.y/3),
+      m1 = 0.8 * p0.y + 0.2 * p3.y,
+      m2 = 0.6 * p0.y + 0.4 * p3.y,
       p = [p0, {x: p0.x, y: m1}, {x: p3.x, y: m2}, p3];
   p = p.map(diagonal.projection());
   return 'M' + p[0] + 'C' + p[1] + ' ' + p[2] + ' ' + p[3];
@@ -393,6 +393,28 @@ function showTrees(assignment) {
       n.x += dim2_offset;
     }
   });
+
+  var buffer_height = parseInt(d3.select('.tree-buffer').style('height'), 10) || 0,
+      height_diff = buffer_height - (dim2_max + dim2_offset + node_height);
+
+  var dim1_offset2 = 0,
+      dim2_offset2 = 0;
+
+  if (height_diff > 0) {
+    dim1_offset2 = height_diff / 2;
+    dim2_offset2 = height_diff;
+
+    window.dim1_offset2 = dim1_offset2;
+    window.dim2_offset2 = dim2_offset2;
+    nodes.forEach(function(n) {
+      if (n.code.indexOf('dim1') != -1) {
+        n.x += dim1_offset2;
+      } else if (n.code.indexOf('dim2') != -1) {
+        n.x += dim2_offset2;
+      }
+    });
+  }
+
   //nodes.forEach(function(n) {
   //  n.x += n.depth * 3;
   //});
@@ -421,7 +443,7 @@ function showTrees(assignment) {
   });
 
   var place_max = d3.max(place_nodes, function(d) {return d.x;});
-  var max_height = Math.max(dim2_max + dim2_offset, place_max);
+  var max_height = Math.max(dim2_max + dim2_offset + dim2_offset2, place_max);
   console.log(place_max);
   console.log(max_height);
 
@@ -520,7 +542,7 @@ function showTrees(assignment) {
         .attr('opacity', 1);
     place_sel.selectAll('circle')
       .transition()
-        .attr('fill', 'steelblue')
+        .attr('fill', 'steelblue');
   }).on('mouseout', function(p) {
     var place_sel = d3.select(this);
     place_link
@@ -614,11 +636,11 @@ function Modal(selector) {
 
     sel.style('display', 'block');
     container.node().appendChild(sel.node());
-  }
+  };
   modal.close = function() {
     overlay.style('display', 'none');
     container.style('display', 'none');
-  }
+  };
   return modal;
 }
 
@@ -633,7 +655,7 @@ var samples = d3.select('#sample-lists').selectAll('div.sample')
     });
 
 samples.selectAll('span')
-  .data(function(d) {return d.filter(function(_, i) {return (i <= 5)});}).enter()
+  .data(function(d) {return d.filter(function(_, i) {return (i <= 5);});}).enter()
   .append('span')
     .attr('class', 'sample-place')
     .text(function(d, i) {return i < 5 ? d : '...';});
