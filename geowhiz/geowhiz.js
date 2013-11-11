@@ -503,6 +503,12 @@ function showTrees(assignment) {
       .attr('y', 3)
       .text(function(d) {return d.pt.name;});
 
+  place.append('title')
+      .text(function(d) {
+        return d.pt.official_name + '\nPop: ' + d.pt.population
+      });
+
+
   place.on('mouseover', function(p) {
     var place_sel = d3.select(this);
     place_link
@@ -533,7 +539,7 @@ function showTrees(assignment) {
 var sample_lists = [
   ['Dublin', 'Athens', 'Rome'],
   ['Springfield', 'Alexandria', 'Arlington', 'Vienna'],
-  ['Washoe', 'Clark', 'Elko'],
+  ['White House', 'Washington Monument', 'Lincoln Memorial', 'The Mall'],
   ['Corpus Christi', 'Jacksonville', 'New York City', 'Phoenix',
     'Sonoma County', 'Williamsburg'],
   ['Allen Park', 'Southgate', 'Birmingham', 'Flint', 'Detroit', 'Taylor',
