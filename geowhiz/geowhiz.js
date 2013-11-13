@@ -394,7 +394,7 @@ function showTrees(assignment) {
     }
   });
 
-  var buffer_height = parseInt(d3.select('.tree-buffer').style('height'), 10) || 0,
+  var buffer_height = parseInt(d3.select('.tree-buffer').style('height'), 10) - 5 || 0,
       height_diff = buffer_height - (dim2_max + dim2_offset + node_height);
 
   var dim1_offset2 = 0,
@@ -436,18 +436,25 @@ function showTrees(assignment) {
     var t1 = node_lookup[['dim0'].concat(d.cat[0].split('|').slice(1)).join('|')],
         t2 = node_lookup[['dim1'].concat(d.cat[1].split('|').slice(1)).join('|')],
         t3 = node_lookup[['dim2'].concat(d.cat[2].split('|').slice(1)).join('|')];
-    console.log('dim0' + d.cat[0].slice(d.cat[0].indexOf('|')));
     place_edges.push({'source': place, 'target': t1});
     place_edges.push({'source': place, 'target': t2});
     place_edges.push({'source': place, 'target': t3});
   });
 
-  var place_max = d3.max(place_nodes, function(d) {return d.x;});
-  var max_height = Math.max(dim2_max + dim2_offset + dim2_offset2, place_max);
-  console.log(place_max);
-  console.log(max_height);
+  var place_range = d3.extent(place_nodes, function(d) {return d.x;}),
+      place_height_diff = buffer_height - 2 * node_height - place_range[1],
+      place_offset = 0;
 
-  //svg.attr('height', Math.max(height, dim2_max + dim2_offset + node_height * 2));
+  if (place_height_diff > 0) {
+    // center vertically if there's space
+    place_offset = (place_height_diff - place_range[0]) / 2;
+    place_nodes.forEach(function(d) {
+      d.x += place_offset;
+    });
+  }
+
+  var max_height = Math.max(dim2_max + dim2_offset + dim2_offset2, place_range[1] + place_offset);
+
   reveal('#tree-container');
   reveal('#map-container');
   svg.transition().attr('height', max_height + node_height);
@@ -457,7 +464,7 @@ function showTrees(assignment) {
   tax.selectAll('path.place-link').remove();
   tax.selectAll('g.place').remove();
 
-  var link = tax.selectAll("path.link")
+  tax.selectAll("path.link")
       .data(links)
     .enter().append("path")
       .attr("class", "link")
