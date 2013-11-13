@@ -52,19 +52,22 @@ class Lookup(object):
         geoname_results = self.gaz.get_geoname_info(list(unique_strings))
 
         for geoname in geoname_results:
+            # convert query result object to dict
             g_dict = dict(geoname)
+
+            # initialize name lookup table when we see a name for the
+            # first time
             if g_dict['name'] not in self.geoname_lookup:
                 self.geoname_lookup[g_dict['name']] = []
-            self.geoname_lookup[g_dict['name']].append(g_dict)
 
+            # add geo-entity dict to lookup tables
+            self.geoname_lookup[g_dict['name']].append(g_dict)
             self.geoname_id_lookup[g_dict['geonameid']] = g_dict
 
         for s in unique_strings:
             if (',' not in s) or (s in self.geoname_lookup):
                 continue
-
             qualified_lookup = self._qualified_name(s)
-
             self.geoname_lookup.update(qualified_lookup)
 
     def _qualified_name(self, s):
@@ -77,19 +80,33 @@ class Lookup(object):
             admins = []
             for g in self.geoname_lookup.get(pt, []):
                 if g['fclass'] == 'A' or last:
-                    a = [g['country']]
-                    a += [g['admin1'], g['admin2'], g['admin3'], g['admin4']]
-                    if None in a:
-                        a = a[:a.index(None)]
-                    if g['fcode'] and g['fcode'].startswith('PCL'):
-                        a = a[:1]
+                    a = [g[c] for c in ['country', 'admin1', 'admin2',
+                                        'admin3', 'admin4' ]]
 
+                    # trim admin region list
+                    if g['fcode']:
+                        if g['fcode'].startswith('PCL'):
+                            a = a[:1]
+                        elif (g['fcode'].startswith('ADM') and
+                            g['fcode'][-1].isdigit()):
+                            a = a[:int(g['fcode'][-1]) + 1]
+                        else:
+                            if '' in a:
+                                a = a[:a.index('')]
+
+                    # flag to signal whether this geo-entity is valid, given
+                    # prior containers
                     valid = False
+
+                    # if there are no prior containers, it is valid
                     if containers is None:
                         valid = True
+
+                    # or if admin regions match prior container, it is valid
                     elif (a[:1] in containers or a[:2] in containers or
                           a[:3] in containers or a[:4] in containers):
                         valid = True
+
                     if valid and not last:
                         admins.append(a)
                     elif valid:
@@ -97,6 +114,7 @@ class Lookup(object):
                             qualified_lookup[s] = []
                         qualified_lookup[s].append(g)
             containers = admins
+
         return qualified_lookup
 
     def get_by_name(self, name):
