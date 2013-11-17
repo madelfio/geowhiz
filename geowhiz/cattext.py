@@ -64,7 +64,7 @@ class CatText(object):
         )
         return u'with population ≥ %s' % (val,)
 
-    def geo_text(self, geo_s, max_depth=4):
+    def geo_text(self, geo_s, max_depth=5):
         if geo_s == GEO_ROOT:
             return 'around the world'
 
