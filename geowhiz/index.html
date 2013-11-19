@@ -6,6 +6,8 @@
   *, *:before, *:after {
     box-sizing: border-box;
   }
+  fieldset {-moz-box-sizing: border-box;}
+  textarea {-mox-box-sizing: border-box;}
   html {height: 100%; font-family: sans;}
   body {background-color: #eee; height: 100%; min-height:100%; margin:0;}
   #content {
@@ -36,13 +38,22 @@
     color: #468;
     font-weight: bold;
   }
-  textarea {
+  #textarea-wrapper {
     position:absolute;
     top:0;
-    bottom:25px;
-    resize: none;
+    bottom:30px;
+    left:5px;
+    right:5px;
     border: 1px solid #ccc;
     border-radius: 2px;
+  }
+  textarea {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border: 0;
+    overflow-y: visible;
+    resize: none;
   }
   #place-list-input-container input {
     position:absolute;
@@ -152,12 +163,14 @@
     <div class="buffer">
       <form>
       <div>
-      <textarea id="vals" style="width: 90%;" spellcheck="false">
+        <div id="textarea-wrapper">
+      <textarea id="vals" spellcheck="false">
 Dublin
 Athens
 Rome</textarea>
-      <input type="submit" id="submit" value="Submit" />
+      </textarea>
       </div>
+      <input type="submit" id="submit" value="Submit" />
       </form>
       <div id="modal-open" class="options"><a href="#">Use sample list</a></div>
     </div>
