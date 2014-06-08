@@ -569,6 +569,7 @@ var sample_lists = [
   ['Dublin', 'Athens', 'Rome'],
   ['Springfield', 'Alexandria', 'Arlington', 'Vienna'],
   ['White House', 'Washington Monument', 'Lincoln Memorial', 'The Mall'],
+  ['Newcastle upon Tyne', 'Cardiff', 'London' , 'Birmingham', 'Brighton', 'Manchester', 'Milton Keynes', 'Exeter'],
   ['Corpus Christi', 'Jacksonville', 'New York City', 'Phoenix',
     'Sonoma County', 'Williamsburg'],
   ['Allen Park', 'Southgate', 'Birmingham', 'Flint', 'Detroit', 'Taylor',

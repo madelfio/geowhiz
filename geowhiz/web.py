@@ -13,6 +13,10 @@ def create_app(geowhiz):
     def js():
         return send_file('geowhiz.js')
 
+    @app.route('/geowhiz-api.js')
+    def api():
+        return send_file('geowhiz-api.js')
+
     @app.route('/geotag')
     def geotag():
 
