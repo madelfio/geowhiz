@@ -278,6 +278,8 @@ class Resolver(object):
                 if category.satisfies_s(g_cat, cat['category']):
                     return_val = dict(g)
                     return_val['cat'] = g_cat
+                    if return_val['name'] != cell:
+                        return_val['full_name'] = cell
                     cell_interpretations.append(return_val)
 
             cell_interpretations.sort(key=resolution_sort, reverse=True)
