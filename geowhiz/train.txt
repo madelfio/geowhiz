@@ -1,5 +1,5 @@
 Australia; Brunei; Cambodia; China
-PCLI; _; Prominent6
+PCLI; dim1; Prominent6
 
 Algeria; Libya; Egypt
 PCLI; AF; Prominent7
@@ -26,7 +26,7 @@ Arlington; Vienna; Springfield; Alexandria; Richmond; Stafford; Ashland
 PPL; US|VA; Prominent4
 
 Mount Everest; Grand Teton
-MT; _; _; Elevation3
+MT; dim1; dim2; Elevation3
 
 Washington, USA
 PPLC; DC|001; Prominent6
@@ -50,13 +50,16 @@ Monterosso; Vernazza; Corniglia; Manarola; Riomaggiore
 PPL; IT|08|SP; Prominent3
 
 Lincoln Memorial; Washington Monument
-MNMT; DC|001; _
+MNMT; DC|001; dim2
 
 Belluno Airport; Linate Airport; Naples International Airport
-AIR; IT; _
+AIR; IT; dim2
 
 Memphis; Jackson; Nashville; Clarksville; Cleveland
 PPL; US; Prominent6
 
 Riva del Garda; Sirmione; Genoa; Florence; Verona
 PPL; IT; Prominent4
+
+Salem; Massachusetts; Boston
+dim0; MA; Prominent5
