@@ -2,6 +2,7 @@ import heapq
 import itertools
 import math
 import operator
+import sys
 
 import category
 
@@ -345,7 +346,7 @@ class ColumnClassifier(object):
         if winner_idx is not None:
             self.add_training_samples(winner_idx, cat_list)
         else:
-            print 'No winner found for %r (%r)' % (cat_list, true_cat)
+            print >> sys.stderr, 'No winner found for %r (%r)' % (cat_list, true_cat)
 
     def add_training_samples(self, winner, candidates):
         raise NotImplementedError
