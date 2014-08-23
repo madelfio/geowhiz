@@ -241,23 +241,24 @@ class Resolver(object):
         self.assignment = assignment  # category for each column
         self.method = method
 
-    def get_interpretations(self, fetch_all=False, method='both'):
+    def get_interpretations(self, **options):
         """
         Returns possible interpretations for each cell, based on column
         category
         """
         interpretations = [
-            self._get_col_interpretations(column, cat, fetch_all=fetch_all,
-                                          method=method)
+            self._get_col_interpretations(column, cat, **options)
             for column, cat in zip(self.grid, self.assignment)
         ]
         return interpretations
 
-    def get_all_interpretations(self, method='both'):
-        return self.get_interpretations(fetch_all=True, method=method)
+    def get_all_interpretations(self, **options):
+        o = dict(options)
+        o['fetch_all'] = True
+        return self.get_interpretations(**o)
 
     def _get_col_interpretations(self, column, cat, fetch_all=False,
-                                 method=None):
+                                 method=None, **options):
         """
         Identifies top candidate interpretations within a category for a column
         of values.
@@ -351,7 +352,10 @@ class ColumnClassifier(object):
     def add_training_samples(self, winner, candidates):
         raise NotImplementedError
 
-    def geotag_full(self, grid, resolution_method=None):
+    def geotag_full(self, grid, **options):
+        resolution_method = options.get('resolution_method', 'both')
+        single_category = options.get('single_category', False)
+
         if grid and isinstance(grid[0], basestring):
             grid = [grid]
         all_strings = [s for col in grid for s in col]
@@ -377,13 +381,16 @@ class ColumnClassifier(object):
             a = ([c[i] for c, i in zip(category_lists, a_idxs) if c], a_prob)
             assignments.append(a)
 
+        if single_category:
+            assignments = assignments[:1]
+
         # Determine most likely interpretations for each toponym given
         # assignment
         geotag_results = []
         for assignment, a_prob in assignments:
             resolver = Resolver(grid, geonames, assignment,
                                 method=resolution_method)
-            interpretations = resolver.get_all_interpretations()
+            interpretations = resolver.get_all_interpretations(method=resolution_method)
             c = None
             #c = [geo_centroid([(g['latitude'], g['longitude'])
             #                   for g in i if 'likely' in g])
@@ -395,12 +402,12 @@ class ColumnClassifier(object):
 
         return geotag_results
 
-    def geotag_grid(self, grid):
-        full_results = self.geotag_full(grid)
+    def geotag_grid(self, grid, **options):
+        full_results = self.geotag_full(grid, **options)
         return full_results[0]
 
-    def column_geotag(self, column):
-        grid_results = self.geotag_grid([column])
+    def column_geotag(self, column, **options):
+        grid_results = self.geotag_grid([column], **options)
         return {'assignment': grid_results['assignment'][0],
                 'likelihood': grid_results['likelihood'],
                 'interpretations': [i
@@ -408,11 +415,11 @@ class ColumnClassifier(object):
                                     if 'likely' in i and i['likely']],
                 'centroid': grid_results['centroid']}
 
-    def geotag(self, grid):
+    def geotag(self, grid, **options):
         if grid and isinstance(grid[0], basestring):
-            return self.column_geotag(grid)
+            return self.column_geotag(grid, **options)
         else:
-            return self.geotag_grid(grid)
+            return self.geotag_grid(grid, **options)
 
     def _classify_column(self, column, category_list):
         raise NotImplementedError

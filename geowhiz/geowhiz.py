@@ -127,8 +127,8 @@ class GeoWhiz(object):
         c.train(load_training_set())
         return c
 
-    def geotag(self, grid):
-        results = self.classifier.geotag(grid)
+    def geotag(self, grid, **options):
+        results = self.classifier.geotag(grid, **options)
         return Assignment(**results)
 
     def geotag_full(self,
