@@ -7,6 +7,7 @@ import sys
 import category
 
 product = lambda x: reduce(operator.mul, x, 1)
+geom_mean = lambda x: math.pow(math.e, sum(math.log(v) for v in x) / len(x))
 depth = lambda x: x.count('|')
 
 
@@ -107,7 +108,7 @@ class Categorizer(object):
     def _add_amb_and_cov(self, counts, column):
         results = []
         for cat, cnts in counts.iteritems():
-            amb = 1.0 * product(cnts) ** (1.0 / len(cnts))
+            amb = geom_mean(cnts)
             results.append({
                 'category': cat,
                 'stats': {'ambiguity': amb,
